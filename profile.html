@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartExam - My Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7fe;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen pb-10">
+
+    <!-- Header -->
+    <header class="bg-[#2b5aed] text-white flex justify-between items-center px-4 md:px-8 py-4 relative z-50">
+        <div class="text-xl md:text-2xl font-bold cursor-pointer" onclick="window.location.href='index.html'">
+            SmartExam
+        </div>
+        <div class="relative">
+            <div id="profile-btn" class="flex items-center space-x-2 md:space-x-3 bg-white/20 px-3 md:px-4 py-2 rounded-full cursor-pointer hover:bg-white/30 transition">
+                <div class="w-7 h-7 md:w-8 md:h-8 bg-white text-[#2b5aed] rounded-full flex items-center justify-center font-bold text-xs md:text-sm">
+                    65
+                </div>
+                <span id="header-name" class="text-xs md:text-sm font-medium truncate max-w-[100px]">ST0065 - Kishore</span>
+            </div>
+            <!-- Profile Dropdown -->
+            <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-100">
+                <a href="profile.html" class="block px-4 py-2 text-sm text-[#2b5aed] bg-blue-50 font-medium"><i class="fa-solid fa-user mr-2"></i> My Profile</a>
+                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><i class="fa-solid fa-gear mr-2"></i> Settings</a>
+                <div class="border-t border-gray-100 my-1"></div>
+                <a href="#" onclick="handleLogout()" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="bg-white px-8 py-3 border-b border-gray-200 text-sm text-gray-500">
+        <span class="hover:text-[#2b5aed] cursor-pointer transition" onclick="window.location.href='index.html'">Home</span> &rsaquo; 
+        <span class="text-gray-800 font-medium">My Profile</span>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="max-w-4xl mx-auto px-4 md:px-8 py-6 md:py-10">
+        
+        <!-- Header Section -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-[#1e293b] mb-1 md:mb-2 text-center sm:text-left">My Profile</h1>
+                <p class="text-gray-500 text-xs md:text-sm text-center sm:text-left">Manage your account settings and personal information.</p>
+            </div>
+            <button onclick="window.location.href='index.html'" class="w-full sm:w-auto text-xs md:text-sm text-[#2b5aed] font-medium hover:text-blue-700 transition flex items-center justify-center bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:shadow">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <!-- Left Column (Avatar & Basic Info) -->
+            <div class="col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+                    <div class="w-24 h-24 mx-auto bg-blue-100 text-[#2b5aed] rounded-full flex items-center justify-center font-bold text-3xl mb-4 border-4 border-white shadow-sm" id="avatar-initial">
+                        K
+                    </div>
+                    <h2 id="display-name" class="text-xl font-bold text-gray-800">Kishore</h2>
+                    <p class="text-sm text-gray-500 mb-4">Student ID: ST0065</p>
+                    
+                    <div class="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold mb-6">
+                        Active Student
+                    </div>
+                    
+                    <div class="border-t border-gray-100 pt-6">
+                        <div class="flex justify-between text-sm mb-3">
+                            <span class="text-gray-500">Total Exams</span>
+                            <span id="profile-total-exams" class="font-bold text-gray-800">0</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-3">
+                            <span class="text-gray-500">Average Score</span>
+                            <span id="profile-avg-score" class="font-bold text-emerald-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Joined</span>
+                            <span class="font-bold text-gray-800">Apr 2026</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column (Profile Form) -->
+            <div class="col-span-1 md:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <h3 class="font-bold text-gray-800">Personal Information</h3>
+                    </div>
+                    
+                    <form onsubmit="saveProfile(event)" class="p-6 space-y-6">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <!-- Full Name -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
+                                <input type="text" id="input-name" value="Kishore" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm bg-gray-50 focus:bg-white">
+                            </div>
+                            
+                            <!-- Student ID -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Student ID</label>
+                                <input type="text" value="ST0065" disabled class="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-500 text-sm bg-gray-100 cursor-not-allowed">
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
+                                <input type="email" value="agarwalvibhu822@gmail.com" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm bg-gray-50 focus:bg-white">
+                            </div>
+
+                            <!-- Phone -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone Number</label>
+                                <input type="tel" value="+1 (555) 123-4567" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm bg-gray-50 focus:bg-white">
+                            </div>
+
+                            <!-- Department -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Department</label>
+                                <select class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm bg-gray-50 focus:bg-white">
+                                    <option value="cs" selected>Computer Science</option>
+                                    <option value="it">Information Technology</option>
+                                    <option value="ee">Electrical Engineering</option>
+                                    <option value="me">Mechanical Engineering</option>
+                                </select>
+                            </div>
+
+                            <!-- Semester -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Current Semester</label>
+                                <select class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm bg-gray-50 focus:bg-white">
+                                    <option value="1">1st Semester</option>
+                                    <option value="2">2nd Semester</option>
+                                    <option value="3">3rd Semester</option>
+                                    <option value="4" selected>4th Semester</option>
+                                    <option value="5">5th Semester</option>
+                                    <option value="6">6th Semester</option>
+                                    <option value="7">7th Semester</option>
+                                    <option value="8">8th Semester</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Bio -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Short Bio</label>
+                            <textarea rows="3" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm bg-gray-50 focus:bg-white resize-none">Passionate computer science student with an interest in networking and database optimization.</textarea>
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-6 flex justify-end space-x-3">
+                            <button type="button" onclick="window.location.href='index.html'" class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition text-sm">
+                                Cancel
+                            </button>
+                            <button type="submit" id="save-btn" class="px-6 py-2.5 bg-[#2b5aed] hover:bg-blue-700 text-white rounded-lg font-medium transition shadow-sm text-sm min-w-[140px]">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Load User Profile Data
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check Authentication
+            const userEmail = localStorage.getItem('smartexam_useremail');
+            if (!userEmail) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const savedName = localStorage.getItem('smartexam_username');
+            const savedEmail = localStorage.getItem('smartexam_useremail');
+            
+            if (savedName) {
+                // Update UI Elements
+                document.getElementById('input-name').value = savedName;
+                document.getElementById('display-name').innerText = savedName;
+                document.getElementById('header-name').innerText = `ST0065 - ${savedName}`;
+                document.getElementById('avatar-initial').innerText = savedName.charAt(0).toUpperCase();
+            }
+
+            if (savedEmail) {
+                // Update email input
+                const emailInput = document.querySelector('input[type="email"]');
+                if (emailInput) emailInput.value = savedEmail;
+                
+                // Load User Specific Stats
+                const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
+                const userResults = allResults.filter(r => r.userEmail === savedEmail);
+                
+                const totalExams = userResults.length;
+                document.getElementById('profile-total-exams').innerText = totalExams;
+                
+                if (totalExams > 0) {
+                    const avgScore = userResults.reduce((acc, curr) => acc + parseFloat(curr.percentage), 0) / totalExams;
+                    document.getElementById('profile-avg-score').innerText = `${avgScore.toFixed(0)}%`;
+                }
+            }
+        });
+
+        // Profile Dropdown Toggle
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', () => {
+            if (!profileDropdown.classList.contains('hidden')) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+
+        // Form Submit Handler
+        function saveProfile(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('save-btn');
+            const originalText = btn.innerHTML;
+            const newName = document.getElementById('input-name').value.trim();
+            
+            // Loading state
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Saving...';
+            btn.classList.add('opacity-90', 'cursor-not-allowed');
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Update the UI with the new name
+                if (newName) {
+                    // Save to localStorage so dashboard can read it
+                    localStorage.setItem('smartexam_username', newName);
+
+                    document.getElementById('display-name').innerText = newName;
+                    document.getElementById('header-name').innerText = `ST0065 - ${newName}`;
+                    // Update Avatar initial
+                    document.getElementById('avatar-initial').innerText = newName.charAt(0).toUpperCase();
+                }
+
+                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Saved!';
+                btn.classList.replace('bg-[#2b5aed]', 'bg-emerald-500');
+                btn.classList.replace('hover:bg-blue-700', 'hover:bg-emerald-600');
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('opacity-90', 'cursor-not-allowed');
+                    btn.classList.replace('bg-emerald-500', 'bg-[#2b5aed]');
+                    btn.classList.replace('hover:bg-emerald-600', 'hover:bg-blue-700');
+                }, 2000);
+            }, 800);
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('smartexam_useremail');
+            localStorage.removeItem('smartexam_username');
+            localStorage.removeItem('smartexam_role');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

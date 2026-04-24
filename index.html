@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartExam Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7fe;
+        }
+        .active-card {
+            border-color: #2b5aed !important;
+            box-shadow: 0 4px 6px -1px rgba(43, 90, 237, 0.2), 0 2px 4px -1px rgba(43, 90, 237, 0.1) !important;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen pb-10">
+
+    <!-- Header -->
+    <header class="bg-[#2b5aed] text-white flex justify-between items-center px-4 md:px-8 py-4 relative z-50">
+        <div class="text-xl md:text-2xl font-bold cursor-pointer" onclick="showSection('available-exams')">
+            SmartExam
+        </div>
+        <div class="relative">
+            <div id="profile-btn" class="flex items-center space-x-2 md:space-x-3 bg-white/20 px-3 md:px-4 py-2 rounded-full cursor-pointer hover:bg-white/30 transition">
+                <div id="header-avatar" class="w-7 h-7 md:w-8 md:h-8 bg-white text-[#2b5aed] rounded-full flex items-center justify-center font-bold text-xs md:text-sm">
+                    K
+                </div>
+                <span id="header-name" class="text-xs md:text-sm font-medium truncate max-w-[100px] md:max-w-none">ST0065 - Kishore</span>
+            </div>
+            <!-- Profile Dropdown -->
+            <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-100">
+                <a href="profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><i class="fa-solid fa-user mr-2"></i> My Profile</a>
+                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><i class="fa-solid fa-gear mr-2"></i> Settings</a>
+                <div class="border-t border-gray-100 my-1"></div>
+                <a href="#" onclick="handleLogout()" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="bg-white px-4 md:px-8 py-3 border-b border-gray-200 text-xs md:text-sm text-gray-500">
+        <span class="hover:text-[#2b5aed] cursor-pointer transition" onclick="showSection('available-exams')">Home</span> &rsaquo; 
+        <span id="breadcrumb-current" class="text-gray-800 font-medium">Dashboard</span>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
+        
+        <!-- Dashboard Wrapper (Cards & Lists) -->
+        <div id="dashboard-wrapper">
+            <!-- Welcome Section -->
+            <div class="mb-6 md:mb-8">
+                <h1 id="dashboard-title" class="text-2xl md:text-3xl font-bold text-[#1e293b] mb-1 md:mb-2">My Dashboard, Kishore</h1>
+                <p id="dashboard-subtitle" class="text-gray-500 text-xs md:text-sm">Welcome back! You have 3 exams available.</p>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
+                <!-- Card 1: Available -->
+                <div id="card-available" onclick="showSection('available-exams')" class="bg-white rounded-xl p-4 md:p-6 shadow-sm flex items-center space-x-4 border border-gray-100 cursor-pointer hover:shadow-md transition active-card">
+                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center text-lg md:text-xl">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs md:text-sm text-gray-500 font-medium mb-0.5 md:mb-1">Available Exams</p>
+                        <h2 id="count-available" class="text-xl md:text-2xl font-bold text-gray-800">28</h2>
+                    </div>
+                </div>
+                
+                <!-- Card 2: Completed -->
+                <div id="card-completed" onclick="showSection('completed-exams')" class="bg-white rounded-xl p-4 md:p-6 shadow-sm flex items-center space-x-4 border border-gray-100 cursor-pointer hover:shadow-md transition">
+                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center text-lg md:text-xl">
+                        <i class="fa-solid fa-square-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs md:text-sm text-gray-500 font-medium mb-0.5 md:mb-1">Completed</p>
+                        <h2 id="count-completed" class="text-xl md:text-2xl font-bold text-gray-800">12</h2>
+                    </div>
+                </div>
+
+                <!-- Card 3: Inbox -->
+                <div id="card-inbox" onclick="showSection('inbox')" class="bg-white rounded-xl p-4 md:p-6 shadow-sm flex items-center space-x-4 border border-gray-100 cursor-pointer hover:shadow-md transition sm:col-span-2 lg:col-span-1">
+                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-yellow-50 text-yellow-500 flex items-center justify-center text-lg md:text-xl">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs md:text-sm text-gray-500 font-medium mb-0.5 md:mb-1">Inbox</p>
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800">6</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Sections -->
+            <div id="content-sections">
+                <!-- Available Exams Section -->
+                <div id="sec-available-exams" class="block">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Available Exams</h3>
+                    
+                    <div id="exams-list-container" class="space-y-4">
+                        <!-- Exams will be dynamically injected here -->
+                    </div>
+                </div>
+
+                <!-- Completed Exams Section -->
+                <div id="sec-completed-exams" class="hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Completed Exams</h3>
+                        <button onclick="showSection('available-exams')" class="text-xs md:text-sm text-[#2b5aed] font-medium hover:text-blue-700 transition flex items-center">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[500px]">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-sm">
+                                    <th class="px-6 py-4 font-medium">Exam Name</th>
+                                    <th class="px-6 py-4 font-medium">Date Taken</th>
+                                    <th class="px-6 py-4 font-medium">Score</th>
+                                    <th class="px-6 py-4 font-medium">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="completed-exams-body" class="text-sm divide-y divide-gray-100">
+                                <!-- Completed exams will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Inbox Section -->
+                <div id="sec-inbox" class="hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Inbox Messages</h3>
+                        <button onclick="showSection('available-exams')" class="text-sm text-[#2b5aed] font-medium hover:text-blue-700 transition flex items-center">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="bg-white rounded-xl p-5 shadow-sm border-l-4 border-[#2b5aed] flex items-start space-x-4">
+                            <div class="bg-blue-50 p-2 rounded-full text-[#2b5aed] mt-1">
+                                <i class="fa-solid fa-bell"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">New Exam Assigned</h4>
+                                <p class="text-gray-500 text-sm mt-1">You have been assigned a new exam "Computer Networks — Chapter 5". Please complete it before the deadline.</p>
+                                <span class="text-xs text-gray-400 mt-2 block">2 hours ago</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex items-start space-x-4 opacity-75">
+                            <div class="bg-gray-100 p-2 rounded-full text-gray-500 mt-1">
+                                <i class="fa-solid fa-envelope-open"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-sm">Results Published</h4>
+                                <p class="text-gray-500 text-sm mt-1">The results for "Operating Systems — Midterm" have been published. Check your completed exams tab.</p>
+                                <span class="text-xs text-gray-400 mt-2 block">1 day ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Active Exam Interface (Hidden by Default) -->
+        <div id="active-exam-wrapper" class="hidden">
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <!-- Exam Header -->
+                <div class="bg-gray-50 px-4 md:px-8 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="text-center sm:text-left">
+                        <h2 id="exam-active-title" class="text-lg md:text-xl font-bold text-gray-800">Exam Title</h2>
+                        <p id="question-counter" class="text-xs md:text-sm text-gray-500">Question 1 of 10</p>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-red-50 px-4 py-2 rounded-lg border border-red-100">
+                        <i class="fa-regular fa-clock text-red-500"></i>
+                        <span id="exam-timer" class="font-bold text-red-600 font-mono text-base md:text-lg">20:00</span>
+                    </div>
+                </div>
+                
+                <!-- Exam Body -->
+                <div class="p-4 md:p-8">
+                    <div id="question-container" class="mb-6 md:mb-8">
+                        <!-- Questions will be injected here by JS -->
+                    </div>
+
+                    <!-- Exam Footer / Navigation -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-gray-100 gap-4">
+                        <button id="prev-btn" onclick="prevQuestion()" class="w-full sm:w-auto px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                            Previous
+                        </button>
+                        <div class="flex w-full sm:w-auto space-x-3">
+                            <button id="next-btn" onclick="nextQuestion()" class="flex-1 sm:flex-none px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition text-sm">
+                                Next
+                            </button>
+                            <button id="submit-exam-btn" onclick="submitExam()" class="flex-1 sm:flex-none px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition shadow-sm hidden text-sm">
+                                Submit Exam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Success Modal Overlay -->
+    <div id="success-modal" class="hidden fixed inset-0 bg-gray-900/50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl p-8 max-w-sm w-full text-center transform transition-all scale-95 opacity-0" id="modal-content">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Exam Submitted!</h3>
+            <p class="text-gray-500 mb-6">Your answers have been successfully recorded. Results will be available shortly.</p>
+            <button onclick="closeModal()" class="w-full bg-[#2b5aed] hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition shadow-sm">
+                Return to Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Data and State
+        const normalizeTitle = (str) => {
+            if (!str) return '';
+            // Standardize dashes and trim
+            return str.replace(/[—–]/g, '-').toLowerCase().trim();
+        };
+
+        const examQuestions = {
+            'Computer Networks — Chapter 5': [
+                {
+                    q: "What does IP stand for?",
+                    options: ["Internet Protocol", "Internal Process", "Interconnected Point", "Intelligent Port"],
+                    correct: 0
+                },
+                {
+                    q: "Which layer of the OSI model is responsible for routing?",
+                    options: ["Physical Layer", "Data Link Layer", "Network Layer", "Transport Layer"],
+                    correct: 2
+                },
+                {
+                    q: "What is the standard port for HTTP?",
+                    options: ["21", "25", "80", "443"],
+                    correct: 2
+                },
+                {
+                    q: "Which protocol is used to resolve a domain name to an IP address?",
+                    options: ["HTTP", "DNS", "FTP", "SMTP"],
+                    correct: 1
+                },
+                {
+                    q: "What does TCP stand for?",
+                    options: ["Total Control Protocol", "Transmission Control Protocol", "Transfer Connection Point", "Technical Communication Process"],
+                    correct: 1
+                }
+            ],
+            'Python Basics — Data Structures': [
+                {
+                    q: "Which of the following is used to define a function in Python?",
+                    options: ["function", "def", "func", "define"],
+                    correct: 1
+                },
+                {
+                    q: "How do you insert a comment in Python?",
+                    options: ["//", "/* */", "#", "--"],
+                    correct: 2
+                },
+                {
+                    q: "Which data type is used to store a sequence of characters?",
+                    options: ["int", "float", "str", "bool"],
+                    correct: 2
+                },
+                {
+                    q: "What is the output of 2 ** 3 in Python?",
+                    options: ["5", "6", "8", "9"],
+                    correct: 2
+                },
+                {
+                    q: "How do you create a list in Python?",
+                    options: ["( )", "{ }", "[ ]", "< >"],
+                    correct: 2
+                }
+            ],
+            'Advanced DBMS — Query Optimization': [
+                {
+                    q: "Which command is used to see the execution plan of a query in SQL?",
+                    options: ["SHOW PLAN", "EXPLAIN", "QUERY PLAN", "ANALYZE"],
+                    correct: 1
+                },
+                {
+                    q: "What is the purpose of an index in a database?",
+                    options: ["To secure data", "To speed up data retrieval", "To save storage space", "To delete duplicates"],
+                    correct: 1
+                },
+                {
+                    q: "Which join returns all records from the left table and matched records from the right table?",
+                    options: ["INNER JOIN", "RIGHT JOIN", "FULL OUTER JOIN", "LEFT JOIN"],
+                    correct: 3
+                },
+                {
+                    q: "What does ACID stand for in DBMS?",
+                    options: ["Atomicity, Consistency, Isolation, Durability", "Accuracy, Control, Integrity, Data", "Access, Connection, Interaction, Distribution", "Array, Column, Index, Database"],
+                    correct: 0
+                },
+                {
+                    q: "Which of the following is NOT a NoSQL database?",
+                    options: ["MongoDB", "Redis", "Cassandra", "PostgreSQL"],
+                    correct: 3
+                }
+            ]
+        };
+
+        let timerInterval;
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check Authentication
+            const userEmail = localStorage.getItem('smartexam_useremail');
+            const userRole = localStorage.getItem('smartexam_role');
+            
+            if (!userEmail) {
+                // Not logged in, redirect to login page
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const savedName = localStorage.getItem('smartexam_username');
+            if (savedName) {
+                // Update Header
+                document.getElementById('header-name').innerText = `ST0065 - ${savedName}`;
+                document.getElementById('header-avatar').innerText = savedName.charAt(0).toUpperCase();
+                
+                // Update Dashboard Titles
+                document.getElementById('dashboard-title').innerText = `My Dashboard, ${savedName}`;
+            }
+
+            // Load and Merge Custom Questions
+            try {
+                const customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
+                console.log('Loading custom exams:', customExams);
+                
+                for (let title in customExams) {
+                    const rawQuestions = Array.isArray(customExams[title]) ? customExams[title] : [];
+                    
+                    // Filter out invalid/corrupted questions
+                    const addedQuestions = rawQuestions.filter(q => q && q.q && Array.isArray(q.options));
+                    
+                    if (addedQuestions.length === 0) continue;
+
+                    // Case-insensitive matching for base exams (with dash normalization)
+                    const normalizedTarget = normalizeTitle(title);
+                    const baseMatch = Object.keys(examQuestions).find(
+                        k => normalizeTitle(k) === normalizedTarget
+                    );
+                    
+                    if (baseMatch) {
+                        // Append to existing base exam
+                        console.log(`Merging ${addedQuestions.length} questions into ${baseMatch}`);
+                        examQuestions[baseMatch] = [...examQuestions[baseMatch], ...addedQuestions];
+                    } else {
+                        // Create new exam entry
+                        console.log(`Creating new exam entry for: ${title}`);
+                        examQuestions[title.trim()] = addedQuestions;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading custom questions:', e);
+            }
+            
+            renderExamsList();
+            renderCompletedExams();
+        });
+
+        // UI Functions
+        function renderCompletedExams() {
+            const container = document.getElementById('completed-exams-body');
+            const currentUserEmail = localStorage.getItem('smartexam_useremail');
+            const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
+            
+            // Filter results for current user
+            const completed = allResults.filter(res => res.userEmail === currentUserEmail);
+            
+            // Update Dashboard Counter
+            document.getElementById('count-completed').innerText = completed.length;
+
+            if (completed.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-gray-400">
+                            No exams completed yet.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            // Show latest first
+            [...completed].reverse().forEach(res => {
+                const percentage = res.percentage || ((res.score / res.total) * 100).toFixed(1);
+                const isPassed = percentage >= 40; 
+                html += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-medium text-gray-800">${res.title}</td>
+                        <td class="px-6 py-4 text-gray-500">${res.date}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-bold ${isPassed ? 'text-[#2b5aed]' : 'text-red-500'}">${res.score} / ${res.total}</div>
+                            <div class="text-[10px] text-gray-400">${percentage}%</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="${isPassed ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} px-2 py-1 rounded text-xs font-semibold">
+                                ${isPassed ? 'Passed' : 'Failed'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderExamsList() {
+            const container = document.getElementById('exams-list-container');
+            let html = '';
+            
+            // Load custom configs (like duration)
+            const customConfigs = JSON.parse(localStorage.getItem('smartexam_custom_config')) || {};
+            
+            // Hardcoded basic exam info for display
+            const baseExams = [
+                { title: 'Computer Networks — Chapter 5', time: 20, diff: 'Medium', color: 'yellow' },
+                { title: 'Python Basics — Data Structures', time: 15, diff: 'Easy', color: 'emerald' },
+                { title: 'Advanced DBMS — Query Optimization', time: 30, diff: 'Hard', color: 'red' }
+            ];
+
+            // Get all unique normalized titles
+            const allTitles = [...new Set([...baseExams.map(e => e.title.trim()), ...Object.keys(examQuestions)])];
+            
+            // Update Dashboard Counter
+            document.getElementById('count-available').innerText = allTitles.length;
+
+            allTitles.forEach(title => {
+                const questions = examQuestions[title] || [];
+                if (questions.length === 0) return;
+
+                // Find base info or default
+                const base = baseExams.find(e => e.title.trim() === title) || { time: questions.length * 2, diff: 'Custom', color: 'blue' };
+                
+                // Check if there is a custom duration set in admin
+                let customDuration = null;
+                const configKey = Object.keys(customConfigs).find(k => normalizeTitle(k) === normalizeTitle(title));
+                if (configKey && customConfigs[configKey].duration) {
+                    customDuration = parseInt(customConfigs[configKey].duration);
+                }
+
+                // Dynamically calculate time and marks if it's a custom exam or has extra questions
+                const totalQuestions = questions.length;
+                const totalMarks = totalQuestions * 10;
+                
+                // Use customDuration if set, otherwise fallback to base or calculated time
+                const totalTime = customDuration || (base.title === title ? Math.max(base.time, totalQuestions * 2) : totalQuestions * 2);
+                
+                html += `
+                    <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between border border-gray-100 hover:shadow-md transition gap-4">
+                        <div class="flex-1">
+                            <h4 class="text-base md:text-lg font-bold text-[#1e293b] mb-1 md:mb-2">${title}</h4>
+                            <div class="text-xs md:text-sm text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
+                                <span><i class="fa-solid fa-file-lines mr-1 opacity-70"></i>${totalQuestions} Questions</span>
+                                <span><i class="fa-solid fa-clock mr-1 opacity-70"></i>${totalTime} mins</span>
+                                <span><i class="fa-solid fa-star mr-1 opacity-70"></i>${totalMarks} marks</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between sm:justify-end space-x-4 md:space-x-6">
+                            <span class="bg-${base.color}-100 text-${base.color}-700 text-[10px] md:text-xs font-semibold px-2 md:px-3 py-1 rounded-full capitalize">${base.diff}</span>
+                            <button onclick="startExam(\`${title}\`, ${totalTime})" class="bg-[#2b5aed] hover:bg-blue-700 text-white font-medium py-2 px-4 md:px-6 rounded-lg transition shadow-sm text-sm">
+                                Start Exam
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Profile Dropdown Toggle
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+        });
+
+        window.addEventListener('click', () => {
+            if (!profileDropdown.classList.contains('hidden')) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+
+        // Tab Navigation Logic
+        function showSection(section) {
+            // Hide exam interface if visible
+            document.getElementById('active-exam-wrapper').classList.add('hidden');
+            document.getElementById('dashboard-wrapper').classList.remove('hidden');
+
+            // Sections
+            const secAvailable = document.getElementById('sec-available-exams');
+            const secCompleted = document.getElementById('sec-completed-exams');
+            const secInbox = document.getElementById('sec-inbox');
+
+            // Cards
+            const cardAvailable = document.getElementById('card-available');
+            const cardCompleted = document.getElementById('card-completed');
+            const cardInbox = document.getElementById('card-inbox');
+
+            // Breadcrumb & Title
+            const breadcrumb = document.getElementById('breadcrumb-current');
+            const title = document.getElementById('dashboard-title');
+            const subtitle = document.getElementById('dashboard-subtitle');
+
+            // Reset all
+            secAvailable.classList.add('hidden');
+            secCompleted.classList.add('hidden');
+            secInbox.classList.add('hidden');
+
+            cardAvailable.classList.remove('active-card');
+            cardCompleted.classList.remove('active-card');
+            cardInbox.classList.remove('active-card');
+
+            if (section === 'available-exams') {
+                secAvailable.classList.remove('hidden');
+                cardAvailable.classList.add('active-card');
+                breadcrumb.innerText = 'Dashboard > Available Exams';
+                
+                const savedName = localStorage.getItem('smartexam_username') || 'Kishore';
+                title.innerText = `My Dashboard, ${savedName}`;
+                
+                const availableCount = document.getElementById('count-available').innerText;
+                subtitle.innerText = `Welcome back! You have ${availableCount} exams available.`;
+            } 
+            else if (section === 'completed-exams') {
+                secCompleted.classList.remove('hidden');
+                cardCompleted.classList.add('active-card');
+                breadcrumb.innerText = 'Dashboard > Completed Exams';
+                title.innerText = 'Completed Exams';
+                const completedCount = document.getElementById('count-completed').innerText;
+                subtitle.innerText = `You have completed ${completedCount} exams so far.`;
+            }
+            else if (section === 'inbox') {
+                secInbox.classList.remove('hidden');
+                cardInbox.classList.add('active-card');
+                breadcrumb.innerText = 'Dashboard > Inbox';
+                title.innerText = 'Inbox';
+                subtitle.innerText = 'You have 2 unread messages.';
+            }
+        }
+
+        // Exam Interaction Logic
+        function startExam(examTitle, minutes) {
+            // Find the correct questions key (using robust normalization)
+            const normalizedTarget = normalizeTitle(examTitle);
+            const matchedKey = Object.keys(examQuestions).find(
+                k => normalizeTitle(k) === normalizedTarget
+            );
+
+            // Reset exam state
+            currentQuestions = matchedKey ? examQuestions[matchedKey] : [];
+            currentQuestionIndex = 0;
+            userAnswers = {};
+
+            // Hide dashboard wrapper, show exam wrapper
+            document.getElementById('dashboard-wrapper').classList.add('hidden');
+            document.getElementById('active-exam-wrapper').classList.remove('hidden');
+            
+            // Update breadcrumb
+            document.getElementById('breadcrumb-current').innerText = `Exam > ${examTitle}`;
+            
+            // Set Exam Title
+            document.getElementById('exam-active-title').innerText = examTitle;
+
+            // Render first question
+            try {
+                renderQuestion();
+            } catch (e) {
+                console.error('Error rendering question:', e);
+            }
+
+            // Start Timer
+            const duration = parseInt(minutes) || 20;
+            let timeRemaining = duration * 60;
+            const timerDisplay = document.getElementById('exam-timer');
+            
+            if (!timerDisplay) {
+                console.error('Timer display element not found!');
+                return;
+            }
+
+            const updateDisplay = () => {
+                try {
+                    let m = Math.floor(timeRemaining / 60);
+                    let s = timeRemaining % 60;
+                    timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                } catch (e) {
+                    console.error('Error updating timer display:', e);
+                }
+            };
+
+            // Update immediately
+            updateDisplay();
+            
+            clearInterval(timerInterval); // Reset any existing timers
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateDisplay();
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    submitExam(); // Auto submit
+                }
+            }, 1000);
+        }
+
+        function renderQuestion() {
+            const container = document.getElementById('question-container');
+            const question = currentQuestions[currentQuestionIndex];
+            
+            if (!question || !question.q || !Array.isArray(question.options)) {
+                container.innerHTML = `
+                    <div class="p-8 text-center">
+                        <i class="fa-solid fa-triangle-exclamation text-orange-400 text-4xl mb-4"></i>
+                        <p class="text-gray-600 font-medium">This question seems to be corrupted or missing data.</p>
+                        <button onclick="showSection('available-exams')" class="mt-4 text-[#2b5aed] hover:underline">Return to Dashboard</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Update counter in header
+            const counter = document.getElementById('question-counter');
+            if (counter) {
+                counter.innerText = `Question ${currentQuestionIndex + 1} of ${currentQuestions.length}`;
+            }
+
+            let html = `
+                <h3 class="text-lg font-medium text-gray-800 mb-6">${currentQuestionIndex + 1}. ${question.q}</h3>
+                <div class="space-y-3">
+            `;
+
+            question.options.forEach((opt, idx) => {
+                const isChecked = userAnswers[currentQuestionIndex] === idx;
+                html += `
+                    <label class="flex items-center space-x-3 p-4 border ${isChecked ? 'border-blue-200 bg-blue-50' : 'border-gray-200'} rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                        <input type="radio" name="exam-q" value="${idx}" ${isChecked ? 'checked' : ''} onchange="saveAnswer(${currentQuestionIndex}, ${idx})" class="w-5 h-5 text-[#2b5aed] focus:ring-[#2b5aed]">
+                        <span class="text-gray-700 ${isChecked ? 'font-medium' : ''}">${opt}</span>
+                    </label>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+
+            // Update buttons
+            document.getElementById('prev-btn').disabled = currentQuestionIndex === 0;
+            
+            if (currentQuestionIndex === currentQuestions.length - 1) {
+                document.getElementById('next-btn').classList.add('hidden');
+                document.getElementById('submit-exam-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('next-btn').classList.remove('hidden');
+                document.getElementById('submit-exam-btn').classList.add('hidden');
+            }
+        }
+
+        function saveAnswer(qIdx, optIdx) {
+            userAnswers[qIdx] = optIdx;
+            renderQuestion(); // Re-render to update styles
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function submitExam() {
+            clearInterval(timerInterval);
+
+            // Calculate Score
+            let score = 0;
+            currentQuestions.forEach((q, idx) => {
+                const correctIdx = q.correct !== undefined ? parseInt(q.correct) : 0; 
+                const userAns = userAnswers[idx] !== undefined ? parseInt(userAnswers[idx]) : -1;
+                
+                if (userAns === correctIdx) {
+                    score += 10;
+                }
+            });
+
+            // Save Result
+            const totalMarks = currentQuestions.length * 10;
+            const percentage = (score / totalMarks) * 100;
+            const currentUserEmail = localStorage.getItem('smartexam_useremail');
+
+            const result = {
+                userEmail: currentUserEmail,
+                title: document.getElementById('exam-active-title').innerText,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                score: score,
+                total: totalMarks,
+                percentage: percentage.toFixed(1)
+            };
+
+            const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
+            allResults.push(result);
+            localStorage.setItem('smartexam_results', JSON.stringify(allResults));
+
+            // Update the completed exams list immediately
+            renderCompletedExams();
+
+            const modal = document.getElementById('success-modal');
+            const content = document.getElementById('modal-content');
+            
+            // Update modal text to show score
+            const modalTitle = document.querySelector('#success-modal h3');
+            const modalDesc = document.querySelector('#success-modal p');
+            if (modalTitle) modalTitle.innerText = "Exam Submitted!";
+            if (modalDesc) modalDesc.innerHTML = `You scored <b>${score} / ${totalMarks}</b> (${percentage.toFixed(1)}%).<br>Your answers have been successfully recorded.`;
+
+            modal.classList.remove('hidden');
+            // Small delay for transition effect
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('success-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Return to dashboard -> completed tab
+                showSection('completed-exams');
+            }, 200);
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('smartexam_useremail');
+            localStorage.removeItem('smartexam_username');
+            localStorage.removeItem('smartexam_role');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

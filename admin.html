@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartExam - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7fe;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen pb-10">
+
+    <!-- Header -->
+    <header class="bg-[#1e293b] text-white flex justify-between items-center px-4 md:px-8 py-4 relative z-50">
+        <div class="flex items-center space-x-4">
+            <div class="text-xl md:text-2xl font-bold cursor-pointer" onclick="window.location.href='index.html'">
+                SmartExam <span class="hidden xs:inline text-[#2b5aed] text-[10px] md:text-sm ml-1 md:ml-2 font-medium bg-blue-50/10 px-1.5 md:px-2 py-0.5 md:py-1 rounded">Admin</span>
+            </div>
+        </div>
+        <div class="relative">
+            <div id="profile-btn" class="flex items-center space-x-2 md:space-x-3 bg-white/10 px-3 md:px-4 py-2 rounded-full cursor-pointer hover:bg-white/20 transition">
+                <div class="w-7 h-7 md:w-8 md:h-8 bg-[#2b5aed] text-white rounded-full flex items-center justify-center font-bold text-xs md:text-sm">
+                    A
+                </div>
+                <span class="text-xs md:text-sm font-medium">Admin</span>
+            </div>
+            <!-- Profile Dropdown -->
+            <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-100 text-gray-800">
+                <a href="#" onclick="handleLogout()" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50"><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-10">
+        
+        <div class="mb-6 md:mb-10">
+            <h1 class="text-2xl md:text-3xl font-bold text-[#1e293b] mb-1 md:mb-2 text-center">Admin Question Management</h1>
+            <p class="text-gray-500 text-xs md:text-sm text-center">Create new exams or add questions to existing ones.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            
+            <!-- Add Question Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-8">
+                    <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fa-solid fa-plus-circle text-[#2b5aed] mr-2"></i> Add Question
+                    </h2>
+                    
+                    <form onsubmit="handleNewQuestion(event)" class="space-y-4">
+                        <!-- Exam Selection -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2 sm:col-span-1">
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Exam Title</label>
+                                <input type="text" id="exam-title" list="exam-list" placeholder="e.g. Computer Networks" required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] text-sm bg-gray-50 focus:bg-white">
+                                <datalist id="exam-list">
+                                    <option value="Computer Networks — Chapter 5">
+                                    <option value="Python Basics — Data Structures">
+                                    <option value="Advanced DBMS — Query Optimization">
+                                </datalist>
+                            </div>
+                            <div class="col-span-2 sm:col-span-1">
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Duration (Mins)</label>
+                                <input type="number" id="exam-duration" placeholder="20" min="1" required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] text-sm bg-gray-50 focus:bg-white">
+                            </div>
+                        </div>
+
+                        <!-- Question Text -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Question</label>
+                            <textarea id="question-text" rows="3" placeholder="Enter the question text..." required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] text-sm bg-gray-50 focus:bg-white resize-none"></textarea>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Options</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="Option 1" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                                <input type="radio" name="correct" value="0" required class="w-4 h-4 text-[#2b5aed]">
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="Option 2" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                                <input type="radio" name="correct" value="1" class="w-4 h-4 text-[#2b5aed]">
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="Option 3" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                                <input type="radio" name="correct" value="2" class="w-4 h-4 text-[#2b5aed]">
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="Option 4" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                                <input type="radio" name="correct" value="3" class="w-4 h-4 text-[#2b5aed]">
+                            </div>
+                            <p class="text-[10px] text-gray-400 italic">Select the radio button for the correct option.</p>
+                        </div>
+
+                        <button type="submit" id="submit-btn" class="w-full bg-[#2b5aed] hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-sm text-sm">
+                            Save Question
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Questions List -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h2 class="font-bold text-gray-800">Current Questions</h2>
+                        <button onclick="clearAllCustom()" class="text-xs text-red-500 hover:text-red-700 font-medium">Clear Custom Questions</button>
+                    </div>
+                    
+                    <div id="custom-questions-list" class="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+                        <!-- Questions will be listed here -->
+                        <div class="p-10 text-center text-gray-400">
+                            <i class="fa-solid fa-folder-open text-4xl mb-4 opacity-20"></i>
+                            <p class="text-sm">No custom questions added yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Success Toast -->
+    <div id="toast" class="hidden fixed bottom-8 right-8 bg-[#1e293b] text-white px-6 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span class="text-sm font-medium">Question added successfully!</span>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const normalizeTitle = (str) => {
+            if (!str) return '';
+            return str.replace(/[—–]/g, '-').toLowerCase().trim();
+        };
+
+        // Check Auth
+        document.addEventListener('DOMContentLoaded', () => {
+            const role = localStorage.getItem('smartexam_role');
+            if (role !== 'admin') {
+                window.location.href = 'login.html';
+                return;
+            }
+            renderCustomQuestions();
+        });
+
+        // Profile Dropdown Toggle
+        const profileBtn = document.getElementById('profile-btn');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('hidden');
+        });
+
+        window.addEventListener('click', () => {
+            if (!profileDropdown.classList.contains('hidden')) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+
+        // Handle Question Submission
+        function handleNewQuestion(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('submit-btn');
+            const rawTitle = document.getElementById('exam-title').value;
+            const duration = parseInt(document.getElementById('exam-duration').value) || 20;
+            const title = rawTitle.trim(); // Normalize by trimming
+            const qText = document.getElementById('question-text').value.trim();
+            
+            // Fix: Only select inputs that are actually options, not the title input
+            const optionInputs = event.target.querySelectorAll('.option-input');
+            const options = Array.from(optionInputs).map(i => i.value.trim());
+            const correctIdx = parseInt(event.target.querySelector('input[name="correct"]:checked').value);
+
+            const newQ = {
+                q: qText,
+                options: options,
+                correct: correctIdx,
+                timestamp: Date.now()
+            };
+
+            // Get existing custom questions
+            let customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
+            
+            // Normalize current title
+            const normalizedTarget = normalizeTitle(title);
+            
+            // Find if this exam already exists in our custom questions (using normalization)
+            const existingKey = Object.keys(customExams).find(k => normalizeTitle(k) === normalizedTarget);
+            const targetKey = existingKey || title;
+
+            if (!customExams[targetKey]) {
+                customExams[targetKey] = [];
+            }
+            
+            customExams[targetKey].push(newQ);
+            localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
+            console.log('Saved updated custom exams:', customExams);
+
+            // Save Exam Metadata (Duration)
+            let customConfig = JSON.parse(localStorage.getItem('smartexam_custom_config')) || {};
+            customConfig[targetKey] = {
+                duration: duration
+            };
+            localStorage.setItem('smartexam_custom_config', JSON.stringify(customConfig));
+
+            // Feedback
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
+            btn.classList.add('opacity-50', 'pointer-events-none');
+
+            setTimeout(() => {
+                btn.innerHTML = 'Save Question';
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                event.target.reset();
+                showToast();
+                renderCustomQuestions();
+            }, 600);
+        }
+
+        function renderCustomQuestions() {
+            const container = document.getElementById('custom-questions-list');
+            const customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
+            
+            const examTitles = Object.keys(customExams);
+            
+            if (examTitles.length === 0) {
+                container.innerHTML = `
+                    <div class="p-10 text-center text-gray-400">
+                        <i class="fa-solid fa-folder-open text-4xl mb-4 opacity-20"></i>
+                        <p class="text-sm">No custom questions added yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            examTitles.forEach(title => {
+                html += `
+                    <div class="p-6">
+                        <h3 class="text-sm font-bold text-[#2b5aed] mb-4 uppercase tracking-wider">${title}</h3>
+                        <div class="space-y-4">
+                `;
+                
+                customExams[title].forEach((q, idx) => {
+                    html += `
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-medium text-gray-800">${q.q}</p>
+                                <button onclick="deleteQuestion('${title}', ${idx})" class="text-gray-300 hover:text-red-500 transition ml-2">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mt-3">
+                                ${q.options.map((opt, oIdx) => `
+                                    <div class="text-[11px] px-2 py-1 rounded ${oIdx === q.correct ? 'bg-emerald-100 text-emerald-700 font-bold border border-emerald-200' : 'bg-white text-gray-400 border border-gray-100'}">
+                                        ${opt}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function deleteQuestion(title, index) {
+            let customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
+            customExams[title].splice(index, 1);
+            
+            if (customExams[title].length === 0) {
+                delete customExams[title];
+            }
+            
+            localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
+            renderCustomQuestions();
+        }
+
+        function clearAllCustom() {
+            if (confirm('Are you sure you want to clear all custom questions? This cannot be undone.')) {
+                localStorage.removeItem('smartexam_custom_questions');
+                localStorage.removeItem('smartexam_custom_config');
+                renderCustomQuestions();
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.replace('translate-y-20', 'translate-y-0');
+                toast.classList.replace('opacity-0', 'opacity-100');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.replace('translate-y-0', 'translate-y-20');
+                toast.classList.replace('opacity-100', 'opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('smartexam_useremail');
+            localStorage.removeItem('smartexam_username');
+            localStorage.removeItem('smartexam_role');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

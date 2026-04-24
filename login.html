@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartExam Portal - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#1a4cd2] via-[#2b5aed] to-[#107a8b] min-h-screen flex items-center justify-center p-4">
+
+    <!-- Login Card -->
+    <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-2xl w-full max-w-[420px] p-6 sm:p-8 md:p-10 relative overflow-hidden transition-all duration-300 mx-2" id="auth-card">
+        
+        <!-- Header -->
+        <div class="text-center mb-6 md:mb-8">
+            <h1 class="text-xl md:text-2xl font-bold text-[#2b5aed] mb-1">SmartExam Portal</h1>
+            <p class="text-[10px] md:text-xs text-gray-400 font-medium">Online Examination Evaluation System</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-[#f3f4f6] p-1 rounded-xl flex mb-8">
+            <button id="tab-signin" onclick="switchTab('signin')" class="flex-1 bg-white text-[#2b5aed] font-semibold py-2.5 rounded-lg shadow-sm text-sm transition-all duration-200">Sign In</button>
+            <button id="tab-signup" onclick="switchTab('signup')" class="flex-1 text-gray-500 font-medium py-2.5 rounded-lg text-sm hover:text-gray-700 transition-all duration-200">Create Account</button>
+        </div>
+
+        <!-- Sign In Form -->
+        <form id="form-signin" onsubmit="handleSignin(event)" class="space-y-6 block">
+            
+            <!-- Email Field -->
+            <div>
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Email / Username</label>
+                <input type="text" id="signin-email" value="agarwalvibhu822@gmail.com" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
+            </div>
+
+            <!-- Password Field -->
+            <div>
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Password</label>
+                <div class="relative">
+                    <input type="password" value="..........." class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm tracking-[0.2em]">
+                    <button type="button" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full bg-[#1e4ed8] hover:bg-[#1e40af] text-white font-bold py-4 rounded-xl transition shadow-md mt-4 flex justify-center items-center space-x-2 text-sm">
+                <span>Sign In &rarr;</span>
+            </button>
+
+            <!-- Footer Link -->
+            <div class="text-center mt-8">
+                <p class="text-xs text-gray-500 font-medium">
+                    No account? <a href="#" onclick="switchTab('signup'); return false;" class="text-[#2b5aed] font-bold hover:underline">Create one free</a>
+                </p>
+            </div>
+        </form>
+
+        <!-- Sign Up Form (Hidden by default) -->
+        <form id="form-signup" onsubmit="handleSignup(event)" class="space-y-5 hidden">
+            
+            <!-- Full Name Field -->
+            <div>
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Full Name</label>
+                <input type="text" id="signup-name" placeholder="e.g. John Doe" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
+            </div>
+
+            <!-- Email Field -->
+            <div>
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Email Address</label>
+                <input type="email" placeholder="you@example.com" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
+            </div>
+
+            <!-- Password Field -->
+            <div>
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Create Password</label>
+                <input type="password" placeholder="Min 8 characters" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full bg-[#107a8b] hover:bg-[#0d6472] text-white font-bold py-4 rounded-xl transition shadow-md mt-4 flex justify-center items-center space-x-2 text-sm">
+                <span>Create Account & Login &rarr;</span>
+            </button>
+            
+            <!-- Footer Link -->
+            <div class="text-center mt-6">
+                <p class="text-xs text-gray-500 font-medium">
+                    Already have an account? <a href="#" onclick="switchTab('signin'); return false;" class="text-[#2b5aed] font-bold hover:underline">Sign in</a>
+                </p>
+            </div>
+        </form>
+
+    </div>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            const userEmail = localStorage.getItem('smartexam_useremail');
+            const userRole = localStorage.getItem('smartexam_role');
+            if (userEmail) {
+                if (userRole === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            }
+        });
+
+        function switchTab(tab) {
+            const formSignin = document.getElementById('form-signin');
+            const formSignup = document.getElementById('form-signup');
+            const tabSignin = document.getElementById('tab-signin');
+            const tabSignup = document.getElementById('tab-signup');
+
+            // Style classes for active/inactive tabs
+            const activeClasses = ['bg-white', 'text-[#2b5aed]', 'shadow-sm'];
+            const inactiveClasses = ['text-gray-500', 'hover:text-gray-700', 'bg-transparent'];
+
+            if (tab === 'signin') {
+                // Show Sign In Form
+                formSignin.classList.remove('hidden');
+                formSignin.classList.add('block');
+                formSignup.classList.remove('block');
+                formSignup.classList.add('hidden');
+
+                // Update Sign In Tab Style
+                tabSignin.classList.add(...activeClasses);
+                tabSignin.classList.remove(...inactiveClasses);
+                
+                // Update Sign Up Tab Style
+                tabSignup.classList.remove(...activeClasses);
+                tabSignup.classList.add(...inactiveClasses);
+            } else {
+                // Show Sign Up Form
+                formSignup.classList.remove('hidden');
+                formSignup.classList.add('block');
+                formSignin.classList.remove('block');
+                formSignin.classList.add('hidden');
+
+                // Update Sign Up Tab Style
+                tabSignup.classList.add(...activeClasses);
+                tabSignup.classList.remove(...inactiveClasses);
+                
+                // Update Sign In Tab Style
+                tabSignin.classList.remove(...activeClasses);
+                tabSignin.classList.add(...inactiveClasses);
+            }
+        }
+
+        function handleSignup(event) {
+            event.preventDefault(); // Prevent default form submission
+            
+            const btn = event.target.querySelector('button[type="submit"]');
+            const nameInput = document.getElementById('signup-name').value.trim();
+            const emailInput = event.target.querySelectorAll('input[type="email"]')[0].value.trim();
+            
+            // Extract first name
+            let firstName = nameInput.split(' ')[0];
+            if (firstName) {
+                // Capitalize first letter
+                firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                localStorage.setItem('smartexam_username', firstName);
+                localStorage.setItem('smartexam_useremail', emailInput);
+            }
+            
+            // Show loading state
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Creating Account...';
+            btn.classList.add('opacity-90', 'cursor-not-allowed');
+            
+            // Simulate a brief API call delay, then log them in (redirect)
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Success!';
+                btn.classList.replace('bg-[#107a8b]', 'bg-emerald-500');
+                btn.classList.replace('hover:bg-[#0d6472]', 'hover:bg-emerald-600');
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+            }, 1000);
+        }
+
+        function handleSignin(event) {
+            event.preventDefault();
+            
+            const btn = event.target.querySelector('button[type="submit"]');
+            const emailInput = document.getElementById('signin-email').value.trim();
+            const passwordInput = event.target.querySelector('input[type="password"]').value;
+            
+            // Admin Check
+            if (emailInput === 'admin@smartexam.com' && passwordInput === 'admin123') {
+                localStorage.setItem('smartexam_role', 'admin');
+                localStorage.setItem('smartexam_username', 'Administrator');
+                localStorage.setItem('smartexam_useremail', 'admin@smartexam.com');
+                
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Admin Login...';
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 800);
+                return;
+            }
+
+            localStorage.setItem('smartexam_role', 'student');
+            localStorage.setItem('smartexam_useremail', emailInput);
+            // Extract first part of email as name
+            let firstName = 'User';
+            if (emailInput && emailInput.includes('@')) {
+                let part = emailInput.split('@')[0];
+                // Remove numbers from the end (e.g. agarwalvibhu822 -> agarwalvibhu)
+                part = part.replace(/[0-9]+$/, '');
+                // Try to find first name if there's a dot (e.g. john.doe -> john)
+                if(part.includes('.')) {
+                    part = part.split('.')[0];
+                }
+                
+                if (part) {
+                    firstName = part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+                }
+            } else if (emailInput) {
+                firstName = emailInput.charAt(0).toUpperCase() + emailInput.slice(1).toLowerCase();
+            }
+            
+            localStorage.setItem('smartexam_username', firstName);
+
+            // Show loading state
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Signing In...';
+            btn.classList.add('opacity-90', 'cursor-not-allowed');
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 800);
+        }
+    </script>
+</body>
+</html>
