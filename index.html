@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartExam Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -109,7 +110,12 @@
                 <!-- Completed Exams Section -->
                 <div id="sec-completed-exams" class="hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Completed Exams</h3>
+                        <div class="flex items-center space-x-3">
+                            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Completed Exams</h3>
+                            <button onclick="downloadScoreCard()" id="download-scorecard-btn" class="hidden text-xs bg-[#2b5aed] hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg transition flex items-center shadow-sm">
+                                <i class="fa-solid fa-file-pdf mr-2"></i> Download Score Card
+                            </button>
+                        </div>
                         <button onclick="showSection('available-exams')" class="text-xs md:text-sm text-[#2b5aed] font-medium hover:text-blue-700 transition flex items-center">
                             <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
                         </button>
@@ -123,6 +129,7 @@
                                     <th class="px-6 py-4 font-medium">Date Taken</th>
                                     <th class="px-6 py-4 font-medium">Score</th>
                                     <th class="px-6 py-4 font-medium">Status</th>
+                                    <th class="px-6 py-4 font-medium text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="completed-exams-body" class="text-sm divide-y divide-gray-100">
@@ -220,6 +227,31 @@
             <button onclick="closeModal()" class="w-full bg-[#2b5aed] hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition shadow-sm">
                 Return to Dashboard
             </button>
+        </div>
+    </div>
+
+    <!-- Review Modal Overlay -->
+    <div id="review-modal" class="hidden fixed inset-0 bg-gray-900/50 flex items-center justify-center z-[60] p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0" id="review-modal-content">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800" id="review-exam-title">Exam Review</h3>
+                    <p class="text-xs text-gray-500 mt-1" id="review-exam-score">Score: 0/0</p>
+                </div>
+                <button onclick="closeReviewModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-8" id="review-questions-container">
+                <!-- Review questions will be injected here -->
+            </div>
+            
+            <div class="p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+                <button onclick="closeReviewModal()" class="w-full bg-gray-800 hover:bg-black text-white font-bold py-3 rounded-xl transition shadow-sm">
+                    Close Review
+                </button>
+            </div>
         </div>
     </div>
 
@@ -386,16 +418,38 @@
             const currentUserEmail = localStorage.getItem('smartexam_useremail');
             const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
             
+            // Data Migration: Ensure all results have an ID and correct userEmail
+            let dataChanged = false;
+            allResults.forEach((res, index) => {
+                if (!res.id) {
+                    res.id = Date.now() + index;
+                    dataChanged = true;
+                }
+            });
+            if (dataChanged) {
+                localStorage.setItem('smartexam_results', JSON.stringify(allResults));
+            }
+            
             // Filter results for current user
             const completed = allResults.filter(res => res.userEmail === currentUserEmail);
             
             // Update Dashboard Counter
             document.getElementById('count-completed').innerText = completed.length;
 
+            // Show/Hide Download Button
+            const downloadBtn = document.getElementById('download-scorecard-btn');
+            if (downloadBtn) {
+                if (completed.length > 0) {
+                    downloadBtn.classList.remove('hidden');
+                } else {
+                    downloadBtn.classList.add('hidden');
+                }
+            }
+
             if (completed.length === 0) {
                 container.innerHTML = `
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-400">
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-400">
                             No exams completed yet.
                         </td>
                     </tr>
@@ -420,6 +474,11 @@
                             <span class="${isPassed ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} px-2 py-1 rounded text-xs font-semibold">
                                 ${isPassed ? 'Passed' : 'Failed'}
                             </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="viewResultDetails('${res.id}')" class="text-xs font-bold text-[#2b5aed] hover:underline">
+                                <i class="fa-solid fa-eye mr-1"></i> View Details
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -702,29 +761,40 @@
         function submitExam() {
             clearInterval(timerInterval);
 
-            // Calculate Score
+            // Calculate Score and store details
             let score = 0;
+            const reviewData = [];
+            
             currentQuestions.forEach((q, idx) => {
                 const correctIdx = q.correct !== undefined ? parseInt(q.correct) : 0; 
                 const userAns = userAnswers[idx] !== undefined ? parseInt(userAnswers[idx]) : -1;
                 
-                if (userAns === correctIdx) {
+                if (userAns == correctIdx) {
                     score += 10;
                 }
+                
+                reviewData.push({
+                    q: q.q,
+                    options: q.options,
+                    correct: correctIdx,
+                    userAnswer: userAns
+                });
             });
 
             // Save Result
             const totalMarks = currentQuestions.length * 10;
-            const percentage = (score / totalMarks) * 100;
+            const percentage = totalMarks > 0 ? (score / totalMarks) * 100 : 0;
             const currentUserEmail = localStorage.getItem('smartexam_useremail');
 
             const result = {
+                id: Date.now(), // Unique ID for viewing details
                 userEmail: currentUserEmail,
                 title: document.getElementById('exam-active-title').innerText,
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
                 score: score,
                 total: totalMarks,
-                percentage: percentage.toFixed(1)
+                percentage: percentage.toFixed(1),
+                review: reviewData
             };
 
             const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
@@ -770,6 +840,217 @@
             localStorage.removeItem('smartexam_username');
             localStorage.removeItem('smartexam_role');
             window.location.href = 'login.html';
+        }
+
+        function viewResultDetails(resultId) {
+            if (!resultId) {
+                alert("Error: Result ID is missing.");
+                return;
+            }
+
+            const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
+            // Use loose equality for finding result to handle potential string/number mismatch
+            const result = allResults.find(r => r.id == resultId);
+            
+            if (!result) {
+                alert("Error: Exam result not found in records.");
+                return;
+            }
+
+            if (!result.review || !Array.isArray(result.review) || result.review.length === 0) {
+                alert("Review data not available for this exam.");
+                return;
+            }
+
+            // Set Header Info
+            document.getElementById('review-exam-title').innerText = result.title;
+            document.getElementById('review-exam-score').innerText = `Score: ${result.score} / ${result.total} (${result.percentage}%)`;
+
+            // Render Questions
+            const container = document.getElementById('review-questions-container');
+            let html = '';
+
+            result.review.forEach((item, idx) => {
+                // Ensure values are compared correctly regardless of type (string vs number)
+                const isCorrect = String(item.userAnswer) === String(item.correct);
+                const options = item.options || [];
+                
+                html += `
+                    <div class="border-b border-gray-100 pb-6 last:border-0">
+                        <div class="flex items-start space-x-3 mb-4">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full ${isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'} flex items-center justify-center text-xs font-bold mt-0.5">
+                                ${idx + 1}
+                            </span>
+                            <h4 class="text-gray-800 font-medium">${item.q || 'Question data missing'}</h4>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-9">
+                            ${options.map((opt, oIdx) => {
+                                let stateClasses = 'border-gray-100 bg-gray-50 text-gray-500';
+                                let icon = '';
+
+                                // Use loose equality for index comparison
+                                if (oIdx == item.correct) {
+                                    stateClasses = 'border-emerald-200 bg-emerald-50 text-emerald-700 font-medium';
+                                    icon = '<i class="fa-solid fa-circle-check ml-2"></i>';
+                                } else if (oIdx == item.userAnswer && !isCorrect) {
+                                    stateClasses = 'border-red-200 bg-red-50 text-red-700 font-medium';
+                                    icon = '<i class="fa-solid fa-circle-xmark ml-2"></i>';
+                                }
+
+                                return `
+                                    <div class="flex items-center justify-between p-3 border rounded-xl text-sm ${stateClasses}">
+                                        <span>${opt}</span>
+                                        ${icon}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        ${!isCorrect && (item.userAnswer == -1 || item.userAnswer === undefined) ? `
+                            <p class="text-[11px] text-red-400 mt-2 pl-9 italic font-medium">Not answered</p>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Show Modal
+            const modal = document.getElementById('review-modal');
+            const content = document.getElementById('review-modal-content');
+            
+            if (modal && content) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+        }
+
+        function closeReviewModal() {
+            const modal = document.getElementById('review-modal');
+            const content = document.getElementById('review-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        async function downloadScoreCard() {
+            const currentUserEmail = localStorage.getItem('smartexam_useremail');
+            const currentUserName = localStorage.getItem('smartexam_username') || 'Student';
+            const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
+            const userResults = allResults.filter(res => res.userEmail === currentUserEmail);
+
+            if (userResults.length === 0) {
+                alert("No results found to generate score card.");
+                return;
+            }
+
+            const btn = document.getElementById('download-scorecard-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Generating PDF...';
+            btn.disabled = true;
+
+            // Calculate overall stats
+            const totalExams = userResults.length;
+            const avgPercentage = (userResults.reduce((acc, res) => acc + parseFloat(res.percentage), 0) / totalExams).toFixed(1);
+            const totalScore = userResults.reduce((acc, res) => acc + res.score, 0);
+            const totalMarks = userResults.reduce((acc, res) => acc + res.total, 0);
+
+            // Create temporary container for PDF content
+            const element = document.createElement('div');
+            element.style.padding = '40px';
+            element.style.backgroundColor = '#ffffff';
+            element.style.fontFamily = "'Inter', sans-serif";
+
+            element.innerHTML = `
+                <div style="text-align: center; border-bottom: 2px solid #2b5aed; padding-bottom: 20px; margin-bottom: 30px;">
+                    <h1 style="color: #2b5aed; margin: 0; font-size: 28px;">SmartExam Online Evaluation</h1>
+                    <p style="color: #64748b; margin: 5px 0 0 0;">Official Performance Score Card</p>
+                </div>
+
+                <div style="display: flex; justify-between; margin-bottom: 30px; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="flex: 1;">
+                        <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Student Name</p>
+                        <p style="margin: 5px 0 0 0; color: #1e293b; font-size: 18px; font-weight: bold;">${currentUserName}</p>
+                        <p style="margin: 15px 0 0 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Email Address</p>
+                        <p style="margin: 5px 0 0 0; color: #1e293b; font-size: 14px;">${currentUserEmail}</p>
+                    </div>
+                    <div style="flex: 1; text-align: right;">
+                        <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase;">Report Generated On</p>
+                        <p style="margin: 5px 0 0 0; color: #1e293b; font-size: 14px;">${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                        <div style="margin-top: 20px; display: inline-block; background-color: #2b5aed; color: white; padding: 10px 20px; border-radius: 8px;">
+                            <span style="font-size: 12px; opacity: 0.8;">Average Score:</span>
+                            <span style="font-size: 20px; font-weight: bold; margin-left: 10px;">${avgPercentage}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 style="color: #1e293b; font-size: 18px; margin-bottom: 15px; border-left: 4px solid #2b5aed; padding-left: 10px;">Exam Summary</h2>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background-color: #f1f5f9; border-bottom: 2px solid #e2e8f0;">
+                            <th style="padding: 12px; text-align: left; color: #475569; font-size: 13px;">Exam Title</th>
+                            <th style="padding: 12px; text-align: left; color: #475569; font-size: 13px;">Date</th>
+                            <th style="padding: 12px; text-align: center; color: #475569; font-size: 13px;">Score</th>
+                            <th style="padding: 12px; text-align: center; color: #475569; font-size: 13px;">Percentage</th>
+                            <th style="padding: 12px; text-align: center; color: #475569; font-size: 13px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${[...userResults].reverse().map(res => {
+                            const isPassed = parseFloat(res.percentage) >= 40;
+                            return `
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px; color: #1e293b; font-weight: 500; font-size: 13px;">${res.title}</td>
+                                    <td style="padding: 12px; color: #64748b; font-size: 13px;">${res.date}</td>
+                                    <td style="padding: 12px; text-align: center; color: #1e293b; font-weight: bold; font-size: 13px;">${res.score} / ${res.total}</td>
+                                    <td style="padding: 12px; text-align: center; color: #64748b; font-size: 13px;">${res.percentage}%</td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        <span style="background-color: ${isPassed ? '#ecfdf5' : '#fef2f2'}; color: ${isPassed ? '#059669' : '#dc2626'}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+                                            ${isPassed ? 'PASSED' : 'FAILED'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background-color: #f8fafc; font-weight: bold;">
+                            <td colspan="2" style="padding: 15px; text-align: right; color: #1e293b;">Overall Total:</td>
+                            <td style="padding: 15px; text-align: center; color: #2b5aed; font-size: 16px;">${totalScore} / ${totalMarks}</td>
+                            <td style="padding: 15px; text-align: center; color: #2b5aed; font-size: 16px;">${avgPercentage}%</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div style="margin-top: 50px; text-align: center; color: #94a3b8; font-size: 11px; border-top: 1px solid #f1f5f9; pt-20px;">
+                    <p>This is a computer-generated document from SmartExam Online Evaluation System.</p>
+                </div>
+            `;
+
+            const opt = {
+                margin: 0,
+                filename: `${currentUserName}_Score_Card.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().from(element).set(opt).save();
+            } catch (error) {
+                console.error('PDF generation failed:', error);
+                alert("Failed to generate PDF. Please try again.");
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
