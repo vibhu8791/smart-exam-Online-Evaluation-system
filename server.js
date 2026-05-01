@@ -6,11 +6,27 @@ const FileSync = require('lowdb/adapters/FileSync');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 
-const adapter = new FileSync('db.json');
+const adapter = new FileSync('/tmp/db.json');
 const db = low(adapter);
 
+// Initial data for DB
+const initialData = { 
+    users: [
+        {
+            "id": "admin-id",
+            "email": "admin@smartexam.com",
+            "password": "admin123",
+            "name": "Administrator",
+            "role": "admin"
+        }
+    ], 
+    exams: [], 
+    results: [], 
+    custom_questions: {} 
+};
+
 // Set defaults for db
-db.defaults({ users: [], exams: [], results: [], custom_questions: {} }).write();
+db.defaults(initialData).write();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
