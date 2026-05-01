@@ -15,6 +15,9 @@ db.defaults({ users: [], exams: [], results: [], custom_questions: {} }).write()
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Export for Vercel
+module.exports = app;
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname)));
