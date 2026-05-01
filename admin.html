@@ -12,9 +12,57 @@
             font-family: 'Inter', sans-serif;
             background-color: #f4f7fe;
         }
+
+        /* Loading Screen Styles */
+        #global-loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2b5aed;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loader-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2b5aed;
+            margin-top: 20px;
+            letter-spacing: -0.5px;
+        }
+        
+        .loader-text {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body class="relative min-h-screen pb-10">
+
+    <!-- Global Loading Screen -->
+    <div id="global-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-logo">SmartExam <span class="text-sm font-medium opacity-50 ml-1">Admin</span></div>
+        <div class="loader-text">Securing admin environment...</div>
+    </div>
 
     <!-- Header -->
     <header class="bg-[#1e293b] text-white flex justify-between items-center px-4 md:px-8 py-4 relative z-50">
@@ -149,7 +197,48 @@
                 return;
             }
             renderCustomQuestions();
+
+            // Hide Global Loader
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.visibility = 'hidden';
+                setTimeout(() => loader.remove(), 500);
+            }
         });
+
+        // Global Loading Functions
+        function showActionLoader(text = 'Loading...') {
+            const loader = document.createElement('div');
+            loader.id = 'action-loader';
+            loader.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(4px);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 9998;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            loader.innerHTML = `
+                <div class="loader-spinner"></div>
+                <div class="loader-text" style="color: #1e293b; font-weight: 600; margin-top: 15px;">${text}</div>
+            `;
+            document.body.appendChild(loader);
+            setTimeout(() => loader.style.opacity = '1', 10);
+        }
+
+        function hideActionLoader() {
+            const loader = document.getElementById('action-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 300);
+            }
+        }
 
         // Profile Dropdown Toggle
         const profileBtn = document.getElementById('profile-btn');
@@ -167,7 +256,7 @@
         });
 
         // Handle Question Submission
-        function handleNewQuestion(event) {
+        async function handleNewQuestion(event) {
             event.preventDefault();
             
             const btn = document.getElementById('submit-btn');
@@ -176,7 +265,6 @@
             const title = rawTitle.trim(); // Normalize by trimming
             const qText = document.getElementById('question-text').value.trim();
             
-            // Fix: Only select inputs that are actually options, not the title input
             const optionInputs = event.target.querySelectorAll('.option-input');
             const options = Array.from(optionInputs).map(i => i.value.trim());
             const correctIdx = parseInt(event.target.querySelector('input[name="correct"]:checked').value);
@@ -188,47 +276,67 @@
                 timestamp: Date.now()
             };
 
-            // Get existing custom questions
-            let customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
-            
-            // Normalize current title
-            const normalizedTarget = normalizeTitle(title);
-            
-            // Find if this exam already exists in our custom questions (using normalization)
-            const existingKey = Object.keys(customExams).find(k => normalizeTitle(k) === normalizedTarget);
-            const targetKey = existingKey || title;
-
-            if (!customExams[targetKey]) {
-                customExams[targetKey] = [];
-            }
-            
-            customExams[targetKey].push(newQ);
-            localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
-            console.log('Saved updated custom exams:', customExams);
-
-            // Save Exam Metadata (Duration)
-            let customConfig = JSON.parse(localStorage.getItem('smartexam_custom_config')) || {};
-            customConfig[targetKey] = {
-                duration: duration
-            };
-            localStorage.setItem('smartexam_custom_config', JSON.stringify(customConfig));
-
             // Feedback
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
             btn.classList.add('opacity-50', 'pointer-events-none');
 
-            setTimeout(() => {
+            try {
+                // Get existing custom questions from server
+                const response = await fetch('/api/custom-questions');
+                const customExams = await response.json();
+                
+                const normalizedTarget = normalizeTitle(title);
+                const existingKey = Object.keys(customExams).find(k => normalizeTitle(k) === normalizedTarget);
+                const targetKey = existingKey || title;
+
+                if (!customExams[targetKey]) {
+                    customExams[targetKey] = [];
+                }
+                
+                customExams[targetKey].push(newQ);
+
+                // Save updated questions to server
+                await fetch('/api/custom-questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: targetKey, questions: customExams[targetKey] })
+                });
+
+                // Also save to localStorage for fallback
+                localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
+
+                // Save Exam Metadata (Duration)
+                let customConfig = JSON.parse(localStorage.getItem('smartexam_custom_config')) || {};
+                customConfig[targetKey] = { duration: duration };
+                localStorage.setItem('smartexam_custom_config', JSON.stringify(customConfig));
+
+                setTimeout(async () => {
+                    btn.innerHTML = 'Save Question';
+                    btn.classList.remove('opacity-50', 'pointer-events-none');
+                    event.target.reset();
+                    showToast();
+                    await renderCustomQuestions();
+                }, 600);
+
+            } catch (error) {
+                console.error('Error saving question:', error);
+                alert('Failed to save question to server.');
                 btn.innerHTML = 'Save Question';
                 btn.classList.remove('opacity-50', 'pointer-events-none');
-                event.target.reset();
-                showToast();
-                renderCustomQuestions();
-            }, 600);
+            }
         }
 
-        function renderCustomQuestions() {
+        async function renderCustomQuestions() {
             const container = document.getElementById('custom-questions-list');
-            const customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
+            let customExams = {};
+            
+            try {
+                const response = await fetch('/api/custom-questions');
+                customExams = await response.json();
+            } catch (error) { 
+                console.error('Error fetching custom questions:', error);
+                customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
+            }
             
             const examTitles = Object.keys(customExams);
             
@@ -261,7 +369,8 @@
                             </div>
                             <div class="grid grid-cols-2 gap-2 mt-3">
                                 ${q.options.map((opt, oIdx) => `
-                                    <div class="text-[11px] px-2 py-1 rounded ${oIdx === q.correct ? 'bg-emerald-100 text-emerald-700 font-bold border border-emerald-200' : 'bg-white text-gray-400 border border-gray-100'}">
+                                    <div class="text-[11px] ${oIdx === q.correct ? 'text-emerald-600 font-bold' : 'text-gray-500'} flex items-center">
+                                        <i class="fa-solid ${oIdx === q.correct ? 'fa-circle-check' : 'fa-circle'} mr-1.5 opacity-50"></i>
                                         ${opt}
                                     </div>
                                 `).join('')}
@@ -269,30 +378,45 @@
                         </div>
                     `;
                 });
-
+                
                 html += `</div></div>`;
             });
-
             container.innerHTML = html;
         }
 
-        function deleteQuestion(title, index) {
+        async function deleteQuestion(title, index) {
             let customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
             customExams[title].splice(index, 1);
             
-            if (customExams[title].length === 0) {
-                delete customExams[title];
+            try {
+                if (customExams[title].length === 0) {
+                    delete customExams[title];
+                    // If entire exam deleted, would need a different endpoint or handle it
+                } else {
+                    await fetch('/api/custom-questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, questions: customExams[title] })
+                    });
+                }
+                localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
+                await renderCustomQuestions();
+            } catch (error) {
+                console.error('Error deleting question:', error);
             }
-            
-            localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
-            renderCustomQuestions();
         }
 
-        function clearAllCustom() {
-            if (confirm('Are you sure you want to clear all custom questions? This cannot be undone.')) {
+        async function clearAllCustom() {
+            if (!confirm('Are you sure you want to clear all custom questions? This cannot be undone.')) return;
+            
+            try {
+                await fetch('/api/custom-questions', { method: 'DELETE' });
                 localStorage.removeItem('smartexam_custom_questions');
                 localStorage.removeItem('smartexam_custom_config');
-                renderCustomQuestions();
+                await renderCustomQuestions();
+            } catch (error) {
+                console.error('Error clearing questions:', error);
+                alert('Failed to clear questions from server.');
             }
         }
 

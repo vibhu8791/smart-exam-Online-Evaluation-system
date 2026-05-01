@@ -12,9 +12,57 @@
             font-family: 'Inter', sans-serif;
             background-color: #f4f7fe;
         }
+
+        /* Loading Screen Styles */
+        #global-loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2b5aed;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loader-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2b5aed;
+            margin-top: 20px;
+            letter-spacing: -0.5px;
+        }
+        
+        .loader-text {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body class="relative min-h-screen pb-10">
+
+    <!-- Global Loading Screen -->
+    <div id="global-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-logo">SmartExam</div>
+        <div class="loader-text">Loading your profile...</div>
+    </div>
 
     <!-- Header -->
     <header class="bg-[#2b5aed] text-white flex justify-between items-center px-4 md:px-8 py-4 relative z-50">
@@ -175,7 +223,7 @@
     <!-- Interactive Scripts -->
     <script>
         // Load User Profile Data
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // Check Authentication
             const userEmail = localStorage.getItem('smartexam_useremail');
             if (!userEmail) {
@@ -199,9 +247,16 @@
                 const emailInput = document.querySelector('input[type="email"]');
                 if (emailInput) emailInput.value = savedEmail;
                 
-                // Load User Specific Stats
-                const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
-                const userResults = allResults.filter(r => r.userEmail === savedEmail);
+                // Load User Specific Stats from server
+                let userResults = [];
+                try {
+                    const response = await fetch(`/api/results/${savedEmail}`);
+                    userResults = await response.json();
+                } catch (error) {
+                    console.error('Error fetching stats from server:', error);
+                    const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
+                    userResults = allResults.filter(r => r.userEmail === savedEmail);
+                }
                 
                 const totalExams = userResults.length;
                 document.getElementById('profile-total-exams').innerText = totalExams;
@@ -211,7 +266,48 @@
                     document.getElementById('profile-avg-score').innerText = `${avgScore.toFixed(0)}%`;
                 }
             }
+
+            // Hide Global Loader
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.visibility = 'hidden';
+                setTimeout(() => loader.remove(), 500);
+            }
         });
+
+        // Global Loading Functions
+        function showActionLoader(text = 'Loading...') {
+            const loader = document.createElement('div');
+            loader.id = 'action-loader';
+            loader.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(4px);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 9998;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            loader.innerHTML = `
+                <div class="loader-spinner"></div>
+                <div class="loader-text" style="color: #1e293b; font-weight: 600; margin-top: 15px;">${text}</div>
+            `;
+            document.body.appendChild(loader);
+            setTimeout(() => loader.style.opacity = '1', 10);
+        }
+
+        function hideActionLoader() {
+            const loader = document.getElementById('action-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 300);
+            }
+        }
 
         // Profile Dropdown Toggle
         const profileBtn = document.getElementById('profile-btn');

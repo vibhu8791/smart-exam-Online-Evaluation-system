@@ -11,9 +11,57 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        /* Loading Screen Styles */
+        #global-loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2b5aed;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loader-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2b5aed;
+            margin-top: 20px;
+            letter-spacing: -0.5px;
+        }
+        
+        .loader-text {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-[#1a4cd2] via-[#2b5aed] to-[#107a8b] min-h-screen flex items-center justify-center p-4">
+
+    <!-- Global Loading Screen -->
+    <div id="global-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-logo">SmartExam</div>
+        <div class="loader-text">Loading secure portal...</div>
+    </div>
 
     <!-- Login Card -->
     <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-2xl w-full max-w-[420px] p-6 sm:p-8 md:p-10 relative overflow-hidden transition-all duration-300 mx-2" id="auth-card">
@@ -36,15 +84,15 @@
             <!-- Email Field -->
             <div>
                 <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Email / Username</label>
-                <input type="text" id="signin-email" value="agarwalvibhu822@gmail.com" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
+                <input type="text" id="signin-email" placeholder="you@example.com" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
             </div>
 
             <!-- Password Field -->
             <div>
                 <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Password</label>
                 <div class="relative">
-                    <input type="password" value="..........." class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm tracking-[0.2em]">
-                    <button type="button" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
+                    <input type="password" id="signin-password" placeholder="Enter your password" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm tracking-[0.2em]">
+                    <button type="button" onclick="togglePasswordVisibility('signin-password', this)" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
                         <i class="fa-regular fa-eye"></i>
                     </button>
                 </div>
@@ -75,13 +123,18 @@
             <!-- Email Field -->
             <div>
                 <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Email Address</label>
-                <input type="email" placeholder="you@example.com" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
+                <input type="email" id="signup-email" placeholder="you@example.com" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
             </div>
 
             <!-- Password Field -->
             <div>
                 <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Create Password</label>
-                <input type="password" placeholder="Min 8 characters" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm">
+                <div class="relative">
+                    <input type="password" id="signup-password" placeholder="Min 8 characters" required class="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#2b5aed] focus:ring-1 focus:ring-[#2b5aed] transition text-gray-700 text-sm tracking-[0.2em]">
+                    <button type="button" onclick="togglePasswordVisibility('signup-password', this)" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Submit Button -->
@@ -111,6 +164,16 @@
                 } else {
                     window.location.href = 'index.html';
                 }
+            }
+        });
+
+        // Global Loader Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.visibility = 'hidden';
+                setTimeout(() => loader.remove(), 500);
             }
         });
 
@@ -155,88 +218,111 @@
             }
         }
 
-        function handleSignup(event) {
-            event.preventDefault(); // Prevent default form submission
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        async function handleSignup(event) {
+            event.preventDefault();
             
             const btn = event.target.querySelector('button[type="submit"]');
             const nameInput = document.getElementById('signup-name').value.trim();
-            const emailInput = event.target.querySelectorAll('input[type="email"]')[0].value.trim();
-            
-            // Extract first name
-            let firstName = nameInput.split(' ')[0];
-            if (firstName) {
-                // Capitalize first letter
-                firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                localStorage.setItem('smartexam_username', firstName);
-                localStorage.setItem('smartexam_useremail', emailInput);
-            }
+            const emailInput = document.getElementById('signup-email').value.trim();
+            const passwordInput = document.getElementById('signup-password').value;
             
             // Show loading state
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Creating Account...';
             btn.classList.add('opacity-90', 'cursor-not-allowed');
-            
-            // Simulate a brief API call delay, then log them in (redirect)
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Success!';
-                btn.classList.replace('bg-[#107a8b]', 'bg-emerald-500');
-                btn.classList.replace('hover:bg-[#0d6472]', 'hover:bg-emerald-600');
-                
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 500);
-            }, 1000);
+
+            try {
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: nameInput, email: emailInput, password: passwordInput })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('smartexam_username', data.user.name.split(' ')[0]);
+                    localStorage.setItem('smartexam_useremail', data.user.email);
+                    localStorage.setItem('smartexam_role', data.user.role);
+
+                    btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Success!';
+                    btn.classList.replace('bg-[#107a8b]', 'bg-emerald-500');
+                    btn.classList.replace('hover:bg-[#0d6472]', 'hover:bg-emerald-600');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 500);
+                } else {
+                    alert(data.message || 'Signup failed');
+                    btn.innerHTML = 'Create Account & Login &rarr;';
+                    btn.classList.remove('opacity-90', 'cursor-not-allowed');
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                alert('Connection to server failed. Ensure the backend is running.');
+                btn.innerHTML = 'Create Account & Login &rarr;';
+                btn.classList.remove('opacity-90', 'cursor-not-allowed');
+            }
         }
 
-        function handleSignin(event) {
+        async function handleSignin(event) {
             event.preventDefault();
             
             const btn = event.target.querySelector('button[type="submit"]');
             const emailInput = document.getElementById('signin-email').value.trim();
-            const passwordInput = event.target.querySelector('input[type="password"]').value;
+            const passwordInput = document.getElementById('signin-password').value;
             
-            // Admin Check
-            if (emailInput === 'admin@smartexam.com' && passwordInput === 'admin123') {
-                localStorage.setItem('smartexam_role', 'admin');
-                localStorage.setItem('smartexam_username', 'Administrator');
-                localStorage.setItem('smartexam_useremail', 'admin@smartexam.com');
-                
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Admin Login...';
-                setTimeout(() => {
-                    window.location.href = 'admin.html';
-                }, 800);
-                return;
-            }
-
-            localStorage.setItem('smartexam_role', 'student');
-            localStorage.setItem('smartexam_useremail', emailInput);
-            // Extract first part of email as name
-            let firstName = 'User';
-            if (emailInput && emailInput.includes('@')) {
-                let part = emailInput.split('@')[0];
-                // Remove numbers from the end (e.g. agarwalvibhu822 -> agarwalvibhu)
-                part = part.replace(/[0-9]+$/, '');
-                // Try to find first name if there's a dot (e.g. john.doe -> john)
-                if(part.includes('.')) {
-                    part = part.split('.')[0];
-                }
-                
-                if (part) {
-                    firstName = part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
-                }
-            } else if (emailInput) {
-                firstName = emailInput.charAt(0).toUpperCase() + emailInput.slice(1).toLowerCase();
-            }
-            
-            localStorage.setItem('smartexam_username', firstName);
-
             // Show loading state
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Signing In...';
             btn.classList.add('opacity-90', 'cursor-not-allowed');
-            
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 800);
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailInput, password: passwordInput })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('smartexam_role', data.user.role);
+                    localStorage.setItem('smartexam_username', data.user.name.split(' ')[0]);
+                    localStorage.setItem('smartexam_useremail', data.user.email);
+
+                    if (data.user.role === 'admin') {
+                        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Admin Login...';
+                        setTimeout(() => {
+                            window.location.href = 'admin.html';
+                        }, 800);
+                    } else {
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 800);
+                    }
+                } else {
+                    alert(data.message || 'Invalid credentials');
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('opacity-90', 'cursor-not-allowed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Connection to server failed. Ensure the backend is running.');
+                btn.innerHTML = originalText;
+                btn.classList.remove('opacity-90', 'cursor-not-allowed');
+            }
         }
     </script>
 </body>

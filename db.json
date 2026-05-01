@@ -1,0 +1,88 @@
+{
+  "users": [
+    {
+      "id": "admin-id",
+      "email": "admin@smartexam.com",
+      "password": "admin123",
+      "name": "Administrator",
+      "role": "admin"
+    },
+    {
+      "id": "5136bd71-2825-4e42-9c2c-7616ae6db234",
+      "name": "Vibhu",
+      "email": "vibhuagarwal2006@gmail.com",
+      "password": "879@Vibhu",
+      "role": "student"
+    }
+  ],
+  "exams": [],
+  "results": [
+    {
+      "id": 1777658576633,
+      "userEmail": "vibhuagarwal2006@gmail.com",
+      "title": "Python Basics — Data Structures",
+      "date": "May 1, 2026",
+      "score": 10,
+      "total": 50,
+      "percentage": "20.0",
+      "review": [
+        {
+          "q": "Which of the following is used to define a function in Python?",
+          "options": [
+            "function",
+            "def",
+            "func",
+            "define"
+          ],
+          "correct": 1,
+          "userAnswer": 0
+        },
+        {
+          "q": "How do you insert a comment in Python?",
+          "options": [
+            "//",
+            "/* */",
+            "#",
+            "--"
+          ],
+          "correct": 2,
+          "userAnswer": 1
+        },
+        {
+          "q": "Which data type is used to store a sequence of characters?",
+          "options": [
+            "int",
+            "float",
+            "str",
+            "bool"
+          ],
+          "correct": 2,
+          "userAnswer": 1
+        },
+        {
+          "q": "What is the output of 2 ** 3 in Python?",
+          "options": [
+            "5",
+            "6",
+            "8",
+            "9"
+          ],
+          "correct": 2,
+          "userAnswer": 1
+        },
+        {
+          "q": "How do you create a list in Python?",
+          "options": [
+            "( )",
+            "{ }",
+            "[ ]",
+            "< >"
+          ],
+          "correct": 2,
+          "userAnswer": 2
+        }
+      ]
+    }
+  ],
+  "custom_questions": {}
+}

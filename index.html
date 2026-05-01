@@ -17,9 +17,57 @@
             border-color: #2b5aed !important;
             box-shadow: 0 4px 6px -1px rgba(43, 90, 237, 0.2), 0 2px 4px -1px rgba(43, 90, 237, 0.1) !important;
         }
+        
+        /* Loading Screen Styles */
+        #global-loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2b5aed;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loader-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2b5aed;
+            margin-top: 20px;
+            letter-spacing: -0.5px;
+        }
+        
+        .loader-text {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body class="relative min-h-screen pb-10">
+
+    <!-- Global Loading Screen -->
+    <div id="global-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-logo">SmartExam</div>
+        <div class="loader-text">Preparing your dashboard...</div>
+    </div>
 
     <!-- Header -->
     <header class="bg-[#2b5aed] text-white flex justify-between items-center px-4 md:px-8 py-4 relative z-50">
@@ -352,12 +400,12 @@
         let currentQuestions = [];
         let currentQuestionIndex = 0;
         let userAnswers = {};
+        let userCompletedResults = [];
 
         // Initialization
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // Check Authentication
             const userEmail = localStorage.getItem('smartexam_useremail');
-            const userRole = localStorage.getItem('smartexam_role');
             
             if (!userEmail) {
                 // Not logged in, redirect to login page
@@ -375,63 +423,94 @@
                 document.getElementById('dashboard-title').innerText = `My Dashboard, ${savedName}`;
             }
 
-            // Load and Merge Custom Questions
+            // Load and Merge Custom Questions from Backend
             try {
-                const customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
-                console.log('Loading custom exams:', customExams);
+                const response = await fetch('/api/custom-questions');
+                const customExams = await response.json();
+                console.log('Loading custom exams from server:', customExams);
                 
                 for (let title in customExams) {
                     const rawQuestions = Array.isArray(customExams[title]) ? customExams[title] : [];
-                    
-                    // Filter out invalid/corrupted questions
                     const addedQuestions = rawQuestions.filter(q => q && q.q && Array.isArray(q.options));
                     
                     if (addedQuestions.length === 0) continue;
 
-                    // Case-insensitive matching for base exams (with dash normalization)
                     const normalizedTarget = normalizeTitle(title);
                     const baseMatch = Object.keys(examQuestions).find(
                         k => normalizeTitle(k) === normalizedTarget
                     );
                     
                     if (baseMatch) {
-                        // Append to existing base exam
-                        console.log(`Merging ${addedQuestions.length} questions into ${baseMatch}`);
                         examQuestions[baseMatch] = [...examQuestions[baseMatch], ...addedQuestions];
                     } else {
-                        // Create new exam entry
-                        console.log(`Creating new exam entry for: ${title}`);
                         examQuestions[title.trim()] = addedQuestions;
                     }
                 }
             } catch (e) {
-                console.error('Error loading custom questions:', e);
+                console.error('Error loading custom questions from server:', e);
             }
             
             renderExamsList();
-            renderCompletedExams();
+            await renderCompletedExams();
+
+            // Hide Global Loader
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                loader.style.visibility = 'hidden';
+                setTimeout(() => loader.remove(), 500);
+            }
         });
 
+        // Global Loading Functions
+        function showActionLoader(text = 'Loading...') {
+            const loader = document.createElement('div');
+            loader.id = 'action-loader';
+            loader.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(4px);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 9998;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            loader.innerHTML = `
+                <div class="loader-spinner"></div>
+                <div class="loader-text" style="color: #1e293b; font-weight: 600; margin-top: 15px;">${text}</div>
+            `;
+            document.body.appendChild(loader);
+            setTimeout(() => loader.style.opacity = '1', 10);
+        }
+
+        function hideActionLoader() {
+            const loader = document.getElementById('action-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 300);
+            }
+        }
+
         // UI Functions
-        function renderCompletedExams() {
+        async function renderCompletedExams() {
             const container = document.getElementById('completed-exams-body');
             const currentUserEmail = localStorage.getItem('smartexam_useremail');
-            const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
             
-            // Data Migration: Ensure all results have an ID and correct userEmail
-            let dataChanged = false;
-            allResults.forEach((res, index) => {
-                if (!res.id) {
-                    res.id = Date.now() + index;
-                    dataChanged = true;
-                }
-            });
-            if (dataChanged) {
-                localStorage.setItem('smartexam_results', JSON.stringify(allResults));
+            try {
+                const response = await fetch(`/api/results/${currentUserEmail}`);
+                userCompletedResults = await response.json();
+            } catch (error) {
+                console.error('Error fetching results from server:', error);
+                // Fallback to local storage if server fails
+                const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
+                userCompletedResults = allResults.filter(res => res.userEmail === currentUserEmail);
             }
             
-            // Filter results for current user
-            const completed = allResults.filter(res => res.userEmail === currentUserEmail);
+            const completed = userCompletedResults;
             
             // Update Dashboard Counter
             document.getElementById('count-completed').innerText = completed.length;
@@ -624,6 +703,8 @@
 
         // Exam Interaction Logic
         function startExam(examTitle, minutes) {
+            showActionLoader('Loading exam questions...');
+            
             // Find the correct questions key (using robust normalization)
             const normalizedTarget = normalizeTitle(examTitle);
             const matchedKey = Object.keys(examQuestions).find(
@@ -659,6 +740,7 @@
             
             if (!timerDisplay) {
                 console.error('Timer display element not found!');
+                hideActionLoader();
                 return;
             }
 
@@ -686,6 +768,8 @@
                     submitExam(); // Auto submit
                 }
             }, 1000);
+
+            hideActionLoader();
         }
 
         function renderQuestion() {
@@ -758,8 +842,9 @@
             }
         }
 
-        function submitExam() {
+        async function submitExam() {
             clearInterval(timerInterval);
+            showActionLoader('Submitting exam and calculating results...');
 
             // Calculate Score and store details
             let score = 0;
@@ -797,12 +882,22 @@
                 review: reviewData
             };
 
-            const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
-            allResults.push(result);
-            localStorage.setItem('smartexam_results', JSON.stringify(allResults));
+            try {
+                await fetch('/api/results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(result)
+                });
+            } catch (error) {
+                console.error('Error saving result to server:', error);
+                // Fallback to local storage
+                const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
+                allResults.push(result);
+                localStorage.setItem('smartexam_results', JSON.stringify(allResults));
+            }
 
             // Update the completed exams list immediately
-            renderCompletedExams();
+            await renderCompletedExams();
 
             const modal = document.getElementById('success-modal');
             const content = document.getElementById('modal-content');
@@ -812,6 +907,8 @@
             const modalDesc = document.querySelector('#success-modal p');
             if (modalTitle) modalTitle.innerText = "Exam Submitted!";
             if (modalDesc) modalDesc.innerHTML = `You scored <b>${score} / ${totalMarks}</b> (${percentage.toFixed(1)}%).<br>Your answers have been successfully recorded.`;
+
+            hideActionLoader();
 
             modal.classList.remove('hidden');
             // Small delay for transition effect
@@ -848,9 +945,8 @@
                 return;
             }
 
-            const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
             // Use loose equality for finding result to handle potential string/number mismatch
-            const result = allResults.find(r => r.id == resultId);
+            const result = userCompletedResults.find(r => r.id == resultId);
             
             if (!result) {
                 alert("Error: Exam result not found in records.");
@@ -942,8 +1038,7 @@
         async function downloadScoreCard() {
             const currentUserEmail = localStorage.getItem('smartexam_useremail');
             const currentUserName = localStorage.getItem('smartexam_username') || 'Student';
-            const allResults = JSON.parse(localStorage.getItem('smartexam_results')) || [];
-            const userResults = allResults.filter(res => res.userEmail === currentUserEmail);
+            const userResults = userCompletedResults;
 
             if (userResults.length === 0) {
                 alert("No results found to generate score card.");
