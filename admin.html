@@ -126,8 +126,19 @@
                             <textarea id="question-text" rows="3" placeholder="Enter the question text..." required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#2b5aed] text-sm bg-gray-50 focus:bg-white resize-none"></textarea>
                         </div>
 
-                        <!-- Options -->
-                        <div class="space-y-3">
+                        <!-- Question Type Toggle -->
+                        <div class="flex items-center space-x-4 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                            <button type="button" onclick="setQuestionType('mcq')" id="btn-type-mcq" class="flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all bg-white text-[#2b5aed] shadow-sm border border-blue-100">
+                                <i class="fa-solid fa-list-ul mr-1.5"></i> MCQ
+                            </button>
+                            <button type="button" onclick="setQuestionType('tf')" id="btn-type-tf" class="flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all text-gray-400 hover:text-gray-600">
+                                <i class="fa-solid fa-check-double mr-1.5"></i> TRUE / FALSE
+                            </button>
+                            <input type="hidden" id="question-type" value="mcq">
+                        </div>
+
+                        <!-- Options Container -->
+                        <div id="options-container" class="space-y-3">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Options</label>
                             <div class="flex items-center space-x-2">
                                 <input type="text" placeholder="Option 1" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
@@ -240,6 +251,67 @@
             }
         }
 
+        function setQuestionType(type) {
+            const mcqBtn = document.getElementById('btn-type-mcq');
+            const tfBtn = document.getElementById('btn-type-tf');
+            const typeInput = document.getElementById('question-type');
+            const container = document.getElementById('options-container');
+
+            typeInput.value = type;
+
+            const activeClasses = ['bg-white', 'text-[#2b5aed]', 'shadow-sm', 'border-blue-100'];
+            const inactiveClasses = ['text-gray-400', 'hover:text-gray-600', 'bg-transparent', 'border-transparent'];
+
+            if (type === 'mcq') {
+                mcqBtn.classList.add(...activeClasses);
+                mcqBtn.classList.remove(...inactiveClasses);
+                tfBtn.classList.add(...inactiveClasses);
+                tfBtn.classList.remove(...activeClasses);
+
+                container.innerHTML = `
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Options</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" placeholder="Option 1" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                        <input type="radio" name="correct" value="0" required class="w-4 h-4 text-[#2b5aed]">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" placeholder="Option 2" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                        <input type="radio" name="correct" value="1" class="w-4 h-4 text-[#2b5aed]">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" placeholder="Option 3" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                        <input type="radio" name="correct" value="2" class="w-4 h-4 text-[#2b5aed]">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" placeholder="Option 4" required class="option-input flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white">
+                        <input type="radio" name="correct" value="3" class="w-4 h-4 text-[#2b5aed]">
+                    </div>
+                    <p class="text-[10px] text-gray-400 italic">Select the radio button for the correct option.</p>
+                `;
+            } else {
+                tfBtn.classList.add(...activeClasses);
+                tfBtn.classList.remove(...inactiveClasses);
+                mcqBtn.classList.add(...inactiveClasses);
+                mcqBtn.classList.remove(...activeClasses);
+
+                container.innerHTML = `
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">True / False</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition">
+                            <span class="text-sm font-medium text-gray-700">True</span>
+                            <input type="radio" name="correct" value="0" required class="w-4 h-4 text-[#2b5aed]">
+                            <input type="hidden" class="option-input" value="True">
+                        </label>
+                        <label class="flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition">
+                            <span class="text-sm font-medium text-gray-700">False</span>
+                            <input type="radio" name="correct" value="1" class="w-4 h-4 text-[#2b5aed]">
+                            <input type="hidden" class="option-input" value="False">
+                        </label>
+                    </div>
+                `;
+            }
+        }
+
         // Profile Dropdown Toggle
         const profileBtn = document.getElementById('profile-btn');
         const profileDropdown = document.getElementById('profile-dropdown');
@@ -303,6 +375,7 @@
                 btn.innerHTML = 'Save Question';
                 btn.classList.remove('opacity-50', 'pointer-events-none');
                 event.target.reset();
+                setQuestionType('mcq'); // Reset to MCQ after save
                 showToast();
                 renderCustomQuestions();
             }, 600);
