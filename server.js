@@ -29,6 +29,13 @@ if (MONGO_URI) {
 // Auth Routes
 app.post('/api/auth/login', async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Database not connected. Please check your MONGO_URI and MongoDB Atlas Network Access settings.' 
+            });
+        }
+
         const { email, password } = req.body;
         const user = await User.findOne({ email, password });
         if (user) {
@@ -43,6 +50,12 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/signup', async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Database not connected.' 
+            });
+        }
         const { name, email, password } = req.body;
         const existingUser = await User.findOne({ email });
         if (existingUser) {
