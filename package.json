@@ -18,13 +18,5 @@
   "bugs": {
     "url": "https://github.com/vibhu8791/smart-exam-Online-Evaluation-system/issues"
   },
-  "homepage": "https://github.com/vibhu8791/smart-exam-Online-Evaluation-system#readme",
-  "dependencies": {
-    "body-parser": "^2.2.2",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "mongoose": "^9.6.1",
-    "uuid": "^14.0.0"
-  }
+  "homepage": "https://github.com/vibhu8791/smart-exam-Online-Evaluation-system#readme"
 }

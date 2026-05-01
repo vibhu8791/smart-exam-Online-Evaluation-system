@@ -230,7 +230,7 @@
             }
         }
 
-        async function handleSignup(event) {
+        function handleSignup(event) {
             event.preventDefault();
             
             const btn = event.target.querySelector('button[type="submit"]');
@@ -242,41 +242,29 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Creating Account...';
             btn.classList.add('opacity-90', 'cursor-not-allowed');
 
-            try {
-                const response = await fetch('/api/auth/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: nameInput, email: emailInput, password: passwordInput })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    localStorage.setItem('smartexam_username', data.user.name.split(' ')[0]);
-                    localStorage.setItem('smartexam_useremail', data.user.email);
-                    localStorage.setItem('smartexam_role', data.user.role);
-
-                    btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Success!';
-                    btn.classList.replace('bg-[#107a8b]', 'bg-emerald-500');
-                    btn.classList.replace('hover:bg-[#0d6472]', 'hover:bg-emerald-600');
-                    
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 500);
-                } else {
-                    alert(data.message || 'Signup failed');
-                    btn.innerHTML = 'Create Account & Login &rarr;';
-                    btn.classList.remove('opacity-90', 'cursor-not-allowed');
-                }
-            } catch (error) {
-                console.error('Signup error:', error);
-                alert('Connection to server failed. Ensure the backend is running.');
+            // Save to localStorage (Frontend-only approach)
+            const users = JSON.parse(localStorage.getItem('smartexam_users')) || [];
+            if (users.find(u => u.email === emailInput)) {
+                alert('User already exists');
                 btn.innerHTML = 'Create Account & Login &rarr;';
                 btn.classList.remove('opacity-90', 'cursor-not-allowed');
+                return;
             }
+
+            const newUser = { name: nameInput, email: emailInput, password: passwordInput, role: 'student' };
+            users.push(newUser);
+            localStorage.setItem('smartexam_users', JSON.stringify(users));
+
+            localStorage.setItem('smartexam_username', nameInput.split(' ')[0]);
+            localStorage.setItem('smartexam_useremail', emailInput);
+            localStorage.setItem('smartexam_role', 'student');
+
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 800);
         }
 
-        async function handleSignin(event) {
+        function handleSignin(event) {
             event.preventDefault();
             
             const btn = event.target.querySelector('button[type="submit"]');
@@ -288,38 +276,25 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Signing In...';
             btn.classList.add('opacity-90', 'cursor-not-allowed');
 
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: emailInput, password: passwordInput })
-                });
+            // Admin Hardcoded Check
+            if (emailInput === 'admin@smartexam.com' && passwordInput === 'admin123') {
+                localStorage.setItem('smartexam_role', 'admin');
+                localStorage.setItem('smartexam_username', 'Admin');
+                localStorage.setItem('smartexam_useremail', emailInput);
+                window.location.href = 'admin.html';
+                return;
+            }
 
-                const data = await response.json();
+            const users = JSON.parse(localStorage.getItem('smartexam_users')) || [];
+            const user = users.find(u => u.email === emailInput && u.password === passwordInput);
 
-                if (data.success) {
-                    localStorage.setItem('smartexam_role', data.user.role);
-                    localStorage.setItem('smartexam_username', data.user.name.split(' ')[0]);
-                    localStorage.setItem('smartexam_useremail', data.user.email);
-
-                    if (data.user.role === 'admin') {
-                        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Admin Login...';
-                        setTimeout(() => {
-                            window.location.href = 'admin.html';
-                        }, 800);
-                    } else {
-                        setTimeout(() => {
-                            window.location.href = 'index.html';
-                        }, 800);
-                    }
-                } else {
-                    alert(data.message || 'Invalid credentials');
-                    btn.innerHTML = originalText;
-                    btn.classList.remove('opacity-90', 'cursor-not-allowed');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Connection to server failed. Ensure the backend is running.');
+            if (user) {
+                localStorage.setItem('smartexam_role', user.role);
+                localStorage.setItem('smartexam_username', user.name.split(' ')[0]);
+                localStorage.setItem('smartexam_useremail', user.email);
+                window.location.href = 'index.html';
+            } else {
+                alert('Invalid credentials');
                 btn.innerHTML = originalText;
                 btn.classList.remove('opacity-90', 'cursor-not-allowed');
             }
