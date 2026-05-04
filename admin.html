@@ -328,7 +328,7 @@
         });
 
         // Handle Question Submission
-        function handleNewQuestion(event) {
+        async function handleNewQuestion(event) {
             event.preventDefault();
             
             const btn = document.getElementById('submit-btn');
@@ -352,38 +352,64 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
             btn.classList.add('opacity-50', 'pointer-events-none');
 
-            // Save to localStorage (Frontend-only approach)
-            let customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
-            
-            const normalizedTarget = normalizeTitle(title);
-            const existingKey = Object.keys(customExams).find(k => normalizeTitle(k) === normalizedTarget);
-            const targetKey = existingKey || title;
+            try {
+                // Get existing custom questions from server
+                const response = await fetch('/api/custom-questions');
+                const customExams = await response.json();
+                
+                const normalizedTarget = normalizeTitle(title);
+                const existingKey = Object.keys(customExams).find(k => normalizeTitle(k) === normalizedTarget);
+                const targetKey = existingKey || title;
 
-            if (!customExams[targetKey]) {
-                customExams[targetKey] = [];
-            }
-            
-            customExams[targetKey].push(newQ);
-            localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
+                if (!customExams[targetKey]) {
+                    customExams[targetKey] = [];
+                }
+                
+                customExams[targetKey].push(newQ);
 
-            // Save Exam Metadata (Duration)
-            let customConfig = JSON.parse(localStorage.getItem('smartexam_custom_config')) || {};
-            customConfig[targetKey] = { duration: duration };
-            localStorage.setItem('smartexam_custom_config', JSON.stringify(customConfig));
+                // Save updated questions to server
+                await fetch('/api/custom-questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: targetKey, questions: customExams[targetKey] })
+                });
 
-            setTimeout(() => {
+                // Also save to localStorage for fallback
+                localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
+
+                // Save Exam Metadata (Duration)
+                let customConfig = JSON.parse(localStorage.getItem('smartexam_custom_config')) || {};
+                customConfig[targetKey] = { duration: duration };
+                localStorage.setItem('smartexam_custom_config', JSON.stringify(customConfig));
+
+                setTimeout(async () => {
+                    btn.innerHTML = 'Save Question';
+                    btn.classList.remove('opacity-50', 'pointer-events-none');
+                    event.target.reset();
+                    setQuestionType('mcq'); // Reset to MCQ after save
+                    showToast();
+                    await renderCustomQuestions();
+                }, 600);
+
+            } catch (error) {
+                console.error('Error saving question:', error);
+                alert('Failed to save question to server. Check database connection.');
                 btn.innerHTML = 'Save Question';
                 btn.classList.remove('opacity-50', 'pointer-events-none');
-                event.target.reset();
-                setQuestionType('mcq'); // Reset to MCQ after save
-                showToast();
-                renderCustomQuestions();
-            }, 600);
+            }
         }
 
-        function renderCustomQuestions() {
+        async function renderCustomQuestions() {
             const container = document.getElementById('custom-questions-list');
-            const customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
+            let customExams = {};
+            
+            try {
+                const response = await fetch('/api/custom-questions');
+                customExams = await response.json();
+            } catch (error) { 
+                console.error('Error fetching custom questions:', error);
+                customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
+            }
             
             const examTitles = Object.keys(customExams);
             
@@ -431,22 +457,50 @@
             container.innerHTML = html;
         }
 
-        function deleteQuestion(title, index) {
-            let customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
-            customExams[title].splice(index, 1);
-            if (customExams[title].length === 0) {
-                delete customExams[title];
+        async function deleteQuestion(title, index) {
+            let customExams = {};
+            try {
+                const response = await fetch('/api/custom-questions');
+                customExams = await response.json();
+            } catch (e) {
+                customExams = JSON.parse(localStorage.getItem('smartexam_custom_questions')) || {};
             }
-            localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
-            renderCustomQuestions();
+
+            if (customExams[title]) {
+                customExams[title].splice(index, 1);
+                
+                try {
+                    if (customExams[title].length === 0) {
+                        delete customExams[title];
+                        // In a real app we'd need a DELETE by title, but here we can just update the object
+                    }
+                    
+                    await fetch('/api/custom-questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, questions: customExams[title] || [] })
+                    });
+                    
+                    localStorage.setItem('smartexam_custom_questions', JSON.stringify(customExams));
+                    await renderCustomQuestions();
+                } catch (error) {
+                    console.error('Error deleting question:', error);
+                }
+            }
         }
 
-        function clearAllCustom() {
+        async function clearAllCustom() {
             if (!confirm('Are you sure you want to clear all custom questions? This cannot be undone.')) return;
             
-            localStorage.removeItem('smartexam_custom_questions');
-            localStorage.removeItem('smartexam_custom_config');
-            renderCustomQuestions();
+            try {
+                await fetch('/api/custom-questions', { method: 'DELETE' });
+                localStorage.removeItem('smartexam_custom_questions');
+                localStorage.removeItem('smartexam_custom_config');
+                await renderCustomQuestions();
+            } catch (error) {
+                console.error('Error clearing questions:', error);
+                alert('Failed to clear questions from server.');
+            }
         }
 
         function showToast() {
